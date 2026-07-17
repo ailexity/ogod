@@ -45,33 +45,70 @@ function publicUrl(key) {
  * @param {'cover'|'gallery'} kind  controls the max dimension
  * @returns {Promise<{key:string,url:string,width:number,height:number}>}
  */
-async function uploadImage(buffer, originalName, kind = 'gallery') {
-  if (!isConfigured) {
+async function uploadImage(buffer, originalName, kind = 'gallery') 
+{
+  const extension = path.extname(originalName).toLowerCase();
+  const allowedExtensions = 
+  [
+    ".jpg",
+    ".jpeg",
+    ".png",
+    ".webp"
+   ];
+
+if (!allowedExtensions.includes(extension)) 
+{
+    const err = new Error("Only JPG, JPEG, PNG and WEBP images are allowed.");
+    err.statusCode = 400;
+    throw err;
+}
+  if (!isConfigured) 
+  {
     const err = new Error('S3 is not configured');
     err.statusCode = 503;
     throw err;
   }
+  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+
+if (buffer.length > MAX_FILE_SIZE)
+{
+    const err = new Error("Image size cannot exceed 5 MB");
+    err.statusCode = 400;
+    throw err;
+}
+  if (!buffer || buffer.length === 0) 
+  {
+    const err = new Error("Empty image received.");
+    err.statusCode = 400;
+    throw err;
+   }
 
   const maxWidth = kind === 'cover' ? 1600 : 1200;
   const processed = await sharp(buffer)
     .rotate() // respect EXIF orientation
     .resize({ width: maxWidth, withoutEnlargement: true })
-    .webp({ quality: 80 })
+    .webp({ quality: 80, effort: 6 })
     .toBuffer({ resolveWithObject: true });
 
   const id = crypto.randomBytes(12).toString('hex');
   const key = `trips/${kind}/${Date.now()}-${id}.webp`;
 
-  await s3.send(
-    new PutObjectCommand({
-      Bucket: env.aws.s3Bucket,
-      Key: key,
-      Body: processed.data,
-      ContentType: 'image/webp',
-      CacheControl: 'public, max-age=31536000, immutable',
-    })
-  );
-
+  try {
+    await s3.send(
+        new PutObjectCommand({
+            Bucket: env.aws.s3Bucket,
+            Key: key,
+            Body: processed.data,
+            ContentType: "image/webp",
+            CacheControl: "public, max-age=31536000, immutable"
+        })
+    );
+} 
+  catch (error) 
+  {
+    logger.error(error);
+    throw error;
+  }
   return {
     key,
     url: publicUrl(key),
