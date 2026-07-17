@@ -10,17 +10,18 @@ const uploadRoutes = require('./uploadRoutes');
 
 const router = express.Router();
 
-router.get('/', (_req, res) =>
-  res.json({
-    success: true,
-    data: {
-      name: 'Ogod API',
-      version: '1.0.0',
-      phase: 'Phase 1 (MVP)',
-      docs: '/api/health',
-    },
-  })
-);
+router.get('/', (_req, res) => {
+    res.status(200).json({
+        success: true,
+        message: "Ogod Backend API Running",
+        data: {
+            name: "Ogod API",
+            version: "1.0.0",
+            phase: "Phase 1 (MVP)",
+            docs: "/api/health"
+        }
+    });
+});
 
 router.use('/auth', authRoutes);
 router.use('/trips', tripRoutes);
