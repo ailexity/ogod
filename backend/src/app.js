@@ -48,6 +48,7 @@ app.use(
 
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true }));
+app.disable("x-powered-by");
 app.use(morgan(env.isProd ? 'combined' : 'dev'));
 
 // Global, generous rate limit as a backstop (auth has its own tighter limit).
@@ -64,7 +65,7 @@ app.get('/api/health', (_req, res) =>
   res.json({ success: true, data: { status: 'ok', uptime: process.uptime(), env: env.nodeEnv } })
 );
 
-app.use('/api', apiRoutes);
+app.use('/api/v1', apiRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
