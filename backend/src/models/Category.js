@@ -17,8 +17,14 @@ const categorySchema = new mongoose.Schema(
       trim: true,
       match: /^[a-z0-9-]+$/,
     },
-    label: { type: String, required: true, trim: true },
-    imageUrl: { type: String, trim: true },
+    label: { type: String, required: true, trim: true, maxlength: 80 },
+    description: 
+    {
+    type: String,
+    trim: true,
+    maxlength: 300,
+    },
+    imageUrl: { type: String, trim: true, default: "" },
     sortOrder: { type: Number, default: 100 },
     active: { type: Boolean, default: true },
   },
@@ -26,3 +32,8 @@ const categorySchema = new mongoose.Schema(
 );
 
 module.exports = mongoose.model('Category', categorySchema);
+categorySchema.index
+  ({
+    sortOrder:1,
+    active:1,
+  });
