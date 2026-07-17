@@ -8,7 +8,7 @@ const ApiError = require('../utils/ApiError');
  * Files are small (trip photos) and processed immediately, so memoryStorage is
  * appropriate. Limits guard against oversized uploads.
  */
-const ALLOWED = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'];
+const ALLOWED = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif','image/gif'];
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -18,7 +18,7 @@ const upload = multer({
   },
   fileFilter(_req, file, cb) {
     if (!ALLOWED.includes(file.mimetype)) {
-      return cb(ApiError.badRequest(`Unsupported image type: ${file.mimetype}`));
+      return cb(ApiError.badRequest( "Only JPG, PNG, WEBP, HEIC and HEIF images are allowed."));
     }
     return cb(null, true);
   },
