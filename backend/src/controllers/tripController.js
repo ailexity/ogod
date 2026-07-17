@@ -58,7 +58,21 @@ const listTrips = asyncHandler(async (req, res) => {
 
   if (category) filter.category = String(category).toLowerCase();
   if (posterId) filter.posterId = posterId;
-  if (q) filter.$text = { $search: q };
+  if (q) {
+    filter.$or = [
+        {
+            $text: {
+                $search: q
+            }
+        },
+        {
+            destinationName: {
+                $regex: q,
+                $options: "i"
+            }
+        }
+    ];
+}
 
   // Geospatial "near" filter: near="lng,lat"
   if (near) {
@@ -143,13 +157,35 @@ const getTrip = asyncHandler(async (req, res) => {
 /** POST /api/trips  (poster) */
 const createTrip = asyncHandler(async (req, res) => {
   const payload = req.body;
-
-  payload.category = await assertCategoryExists(payload.category);
-
+payload.category = await assertCategoryExists(payload.category);
+if (
+    new Date(payload.endDate) <
+    new Date(payload.startDate)
+   ) 
+  {
+    throw ApiError.badRequest(
+        "End date must be after start date."
+    );
+   }
   // Check price
-  if (payload.pricePerPerson < 0) {
+  if (payload.pricePerPerson < 0) 
+  {
     throw ApiError.badRequest("Invalid trip price.");
   }
+  if (payload.totalSeats < 1)
+  {
+    throw ApiError.badRequest(
+        "Total seats must be greater than zero."
+    );
+  }
+  if (payload.pricePerPerson < 0) 
+  {
+    throw ApiError.badRequest(
+        "Price cannot be negative."
+    );
+  }
+
+payload.seatsRemaining = payload.totalSeats; 
 
   const trip = await Trip.create({
     ...payload,
@@ -184,7 +220,39 @@ const updateTrip = asyncHandler(async (req, res) => {
   throw ApiError.badRequest(
     "Deleted trips cannot be edited."
   );
+  }
+if (
+    trip.status === "live" &&
+    trip.endDate < new Date()
+  ) 
+  {
+    trip.status = "past";
+    await trip.save();
+  }
+  // Update seats safely
+if (updates.totalSeats !== undefined) {
+    const bookedSeats = trip.totalSeats - trip.seatsRemaining;
+
+    if (updates.totalSeats < bookedSeats) {
+        throw ApiError.badRequest(
+            "Total seats cannot be less than already booked seats."
+        );
+    }
+
+    trip.seatsRemaining =
+        updates.totalSeats - bookedSeats;
+
+    trip.totalSeats = updates.totalSeats;
 }
+
+  delete updates.totalSeats;
+
+  if (trip.startDate <= new Date()) 
+  {
+    throw ApiError.badRequest(
+        "Trip cannot be edited after it has started."
+    );
+  }
 
   Object.assign(trip, updates);
   await trip.save();
@@ -221,7 +289,11 @@ const myListings = asyncHandler(async (req, res) =>
     posterId: req.user._id,
     status: { $ne: 'deleted' },
   })
-    .sort({ createdAt: -1 })
+   .sort
+    ({
+    startDate: 1,
+    createdAt: -1
+    })
     .lean();
 
   const active = trips.filter((t) => t.status === 'live' || t.status === 'paused');
