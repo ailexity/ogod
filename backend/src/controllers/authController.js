@@ -30,6 +30,16 @@ const result = await otpService.requestOtp(mobile);
       : 'OTP sent to your mobile number.',
   });
 });
+const resendOtp = asyncHandler(async (req, res) => {
+    const result = await otpService.requestOtp(req.body.mobile);
+
+    return ok(res, {
+        mobile: result.mobile,
+        expiresInSeconds: result.expiresInSeconds,
+        devCode: result.devCode,
+        message: "OTP resent successfully."
+    });
+});
 
 /**
  * POST /api/auth/verify-otp
@@ -37,7 +47,8 @@ const result = await otpService.requestOtp(mobile);
  * Verifies the OTP, creates the poster on first login, returns a JWT.
  */
 const verifyOtp = asyncHandler(async (req, res) => {
-const {
+const
+{
   code,
   name,
   organizationName,
@@ -52,6 +63,11 @@ const {
 
   let user = await User.findOne({ mobile });
   const isNewUser = !user;
+  if (user)
+  {
+    user.lastLogin = new Date();
+    await user.save();
+  }
 
   if (!user) {
     // First-time sign-up requires a name to complete the basic profile.
@@ -88,16 +104,30 @@ const {
     }
 });
 
+
 /** GET /api/auth/me — current authenticated user. */
 const me = asyncHandler(async (req, res) => ok(res, { user: req.user }));
 
 /** PATCH /api/auth/me — update basic profile fields. */
 const updateMe = asyncHandler(async (req, res) => {
   const { name, organizationName } = req.body;
+  if (name && name.trim().length < 3) 
+  {
+    throw ApiError.badRequest("Name should contain at least 3 characters");
+  }
   if (name !== undefined) req.user.name = name;
   if (organizationName !== undefined) req.user.organizationName = organizationName;
   await req.user.save();
   return ok(res, { user: req.user });
 });
+  
+  const logout = asyncHandler(async (req, res) => 
+{
+    return ok(res,
+   {
+        message: "Logged out successfully."
+    });
 
-module.exports = { requestOtp, verifyOtp, me, updateMe };
+});
+
+module.exports = { requestOtp, resend, verifyOtp, me, updateMe, logout };
