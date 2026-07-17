@@ -16,13 +16,16 @@ function normalizeMobile(raw) {
   if (!raw) throw ApiError.badRequest('Mobile number is required');
   let digits = String(raw).replace(/\D/g, '');
   if (digits.length === 10) digits = `91${digits}`;
-  if (digits.length < 11 || digits.length > 15) {
+ if (!/^[0-9]{11,15}$/.test(digits)) 
+{
+ {
     throw ApiError.badRequest('Invalid mobile number');
   }
   return digits;
 }
 
-function generateCode(length) {
+function generateCode(length) 
+{
   // Cryptographically-random numeric code, zero-padded.
   const max = 10 ** length;
   const n = crypto.randomInt(0, max);
@@ -35,6 +38,21 @@ function generateCode(length) {
  */
 async function requestOtp(rawMobile) {
   const mobile = normalizeMobile(rawMobile);
+  const existingOtp = await Otp.findOne({
+    mobile,
+    purpose: "login"
+});
+
+if (
+    existingOtp &&
+    existingOtp.createdAt &&
+    Date.now() - existingOtp.createdAt.getTime() < 30000
+   ) 
+   {
+    throw ApiError.tooMany(
+        "Please wait 30 seconds before requesting another OTP."
+    );
+   }
   const code = generateCode(env.otp.length);
   const codeHash = await bcrypt.hash(code, 10);
   const expiresAt = new Date(Date.now() + env.otp.ttlSeconds * 1000);
@@ -46,7 +64,15 @@ async function requestOtp(rawMobile) {
     { upsert: true, new: true, setDefaultsOnInsert: true }
   );
 
-  await sendOtpSms(mobile, code);
+  try {
+        await sendOtpSms(mobile, code);
+      } 
+  catch (error) 
+  {
+    throw ApiError.internal(
+        "Unable to send OTP. Please try again."
+    );
+  }
 
   return {
     mobile,
@@ -64,7 +90,12 @@ async function requestOtp(rawMobile) {
 async function verifyOtp(rawMobile, submittedCode) {
   const mobile = normalizeMobile(rawMobile);
   if (!submittedCode) throw ApiError.badRequest('OTP code is required');
-
+  if (!/^[0-9]{6}$/.test(String(submittedCode))) 
+  {
+    throw ApiError.badRequest(
+        "OTP must be exactly 6 digits."
+    );
+  }
   const record = await Otp.findOne({ mobile, purpose: 'login' });
   if (!record) throw ApiError.badRequest('No OTP requested for this number, or it expired');
 
@@ -86,6 +117,10 @@ async function verifyOtp(rawMobile, submittedCode) {
   }
 
   await record.deleteOne();
+  console.log
+    (
+    `OTP verified successfully for ${mobile}`
+    );
   return { mobile };
 }
 
