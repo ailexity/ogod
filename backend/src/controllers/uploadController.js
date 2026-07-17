@@ -15,6 +15,25 @@ const uploadSingle = asyncHandler(async (req, res) => {
     throw new ApiError(503, 'Media storage is not configured on the server');
   }
   if (!req.file) throw ApiError.badRequest('No file uploaded (expected field "file")');
+  const allowedTypes = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+];
+
+  if (req.file.size > 5 * 1024 * 1024) 
+  {
+  throw ApiError.badRequest(
+    "Maximum file size is 5 MB."
+  );
+ }
+
+if (!allowedTypes.includes(req.file.mimetype))
+{
+  throw ApiError.badRequest(
+    "Only JPG, PNG and WEBP images are allowed."
+  );
+}
 
   const kind = req.query.kind === 'cover' ? 'cover' : 'gallery';
   const result = await s3.uploadImage(req.file.buffer, req.file.originalname, kind);
@@ -30,12 +49,44 @@ const uploadMany = asyncHandler(async (req, res) => {
     throw new ApiError(503, 'Media storage is not configured on the server');
   }
   const files = req.files || [];
+  if (files.length > 12)
+  {
+  throw ApiError.badRequest(
+    "Maximum 12 images are allowed."
+  );
+}
+
+const allowedTypes = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+];
+
+for (const file of files)
+{
+  if (!allowedTypes.includes(file.mimetype))
+  {
+    throw ApiError.badRequest(
+      "Only JPG, PNG and WEBP images are allowed."
+    );
+  }
+
+  if (file.size > 5 * 1024 * 1024)
+  {
+    throw ApiError.badRequest(
+      "Each image must be less than 5 MB."
+    );
+  }
+}
   if (files.length === 0) throw ApiError.badRequest('No files uploaded (expected field "files")');
 
   const assets = await Promise.all(
     files.map((f) => s3.uploadImage(f.buffer, f.originalname, 'gallery'))
   );
-  return ok(res, { assets });
+  return ok(res,{
+  asset: result,
+  uploadedAt: new Date(),
+});
 });
 
 module.exports = { uploadSingle, uploadMany };
