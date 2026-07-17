@@ -13,7 +13,7 @@ const ALLOWED = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/h
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 10 * 1024 * 1024, // 10 MB per file (pre-compression)
+    fileSize: 5 * 1024 * 1024, // 5 MB per file (pre-compression)
     files: 12,
   },
   fileFilter(_req, file, cb) {
@@ -24,4 +24,4 @@ const upload = multer({
   },
 });
 
-module.exports = upload;
+module.exports = upload, ALLOWED ;
