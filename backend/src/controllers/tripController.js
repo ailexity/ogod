@@ -42,6 +42,15 @@ const listTrips = asyncHandler(async (req, res) => {
   const { q, category, status, posterId, near, radiusKm, page, limit, sort } = req.query;
 
   const filter = {};
+  await Trip.updateMany(
+  {
+    endDate: { $lt: new Date() },
+    status: "live",
+  },
+  {
+    status: "past",
+  }
+);
 
   // Travelers only ever see live trips. A poster/admin may request other
   // statuses (e.g. their own paused listings) — enforced in myListings/admin.
@@ -117,17 +126,30 @@ const homeShelves = asyncHandler(async (req, res) => {
 /** GET /api/trips/:id  (public) */
 const getTrip = asyncHandler(async (req, res) => {
   const trip = await Trip.findById(req.params.id).populate(
-    'posterId',
-    'name organizationName mobile'
+    "posterId",
+    "name organizationName mobile"
   );
-  if (!trip || trip.status === 'deleted') throw ApiError.notFound('Trip not found');
+
+  if (!trip || trip.status === "deleted")
+    throw ApiError.notFound("Trip not found");
+
+  trip.views = (trip.views || 0) + 1;
+
+  await trip.save();
+
   return ok(res, { trip });
 });
 
 /** POST /api/trips  (poster) */
 const createTrip = asyncHandler(async (req, res) => {
   const payload = req.body;
+
   payload.category = await assertCategoryExists(payload.category);
+
+  // Check price
+  if (payload.pricePerPerson < 0) {
+    throw ApiError.badRequest("Invalid trip price.");
+  }
 
   const trip = await Trip.create({
     ...payload,
@@ -157,6 +179,13 @@ const updateTrip = asyncHandler(async (req, res) => {
     updates.category = await assertCategoryExists(updates.category);
   }
 
+  if (trip.status === "deleted")
+  {
+  throw ApiError.badRequest(
+    "Deleted trips cannot be edited."
+  );
+}
+
   Object.assign(trip, updates);
   await trip.save();
   return ok(res, { trip });
@@ -180,7 +209,14 @@ const deleteTrip = asyncHandler(async (req, res) => {
 });
 
 /** GET /api/trips/mine — the poster's own active + past listings dashboard. */
-const myListings = asyncHandler(async (req, res) => {
+const myListings = asyncHandler(async (req, res) =>
+  {
+  if (payload.totalSeats <= 0) 
+  {
+  throw ApiError.badRequest(
+    "Total seats must be greater than zero."
+  );
+}
   const trips = await Trip.find({
     posterId: req.user._id,
     status: { $ne: 'deleted' },
