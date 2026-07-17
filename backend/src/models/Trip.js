@@ -38,7 +38,7 @@ const destinationSchema = new mongoose.Schema(
 const tripSchema = new mongoose.Schema(
   {
     posterId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
-    title: { type: String, required: true, trim: true, maxlength: 160 },
+    title: { type: String, required: true, trim: true, minlength: 5, maxlength: 160 },
 
     // Open value — validated against the `categories` collection at write time,
     // never a hard-coded enum. Keeps the platform trip-type agnostic.
@@ -50,11 +50,17 @@ const tripSchema = new mongoose.Schema(
     endDate: { type: Date, required: true },
     durationDays: { type: Number, min: 1 },
 
-    pricePerPerson: { type: Number, required: true, min: 0 },
+  pricePerPerson: 
+  {
+    type: Number,
+    required: true,
+    min: 0,
+    max: 1000000
+  },
     totalSeats: { type: Number, required: true, min: 1 },
     seatsRemaining: { type: Number, min: 0 },
 
-    description: { type: String, trim: true, maxlength: 5000 },
+    description: { type: String, trim: true, minlength: 20, maxlength: 5000 },
     meetingPoint: {
     type: String,
     trim: true,
@@ -79,6 +85,11 @@ meetingTime: {
     type: Number,
     default: 0,
 },
+    publishedAt: 
+    {
+    type: Date,
+    default: Date.now
+     },
 
 bookings: {
   type: Number,
@@ -95,8 +106,15 @@ tripSchema.index({ title: 'text', 'destination.name': 'text', description: 'text
 
 // Default seatsRemaining to totalSeats and derive durationDays if omitted.
 tripSchema.pre('validate', function preValidate(next) {
-  if (this.seatsRemaining === undefined || this.seatsRemaining === null) {
+  if (this.seatsRemaining === undefined || this.seatsRemaining === null)
+  {
     this.seatsRemaining = this.totalSeats;
+  }
+  if (this.seatsRemaining > this.totalSeats)
+  {
+    return next(
+        new Error("Remaining seats cannot exceed total seats")
+    );
   }
   if (!this.durationDays && this.startDate && this.endDate) {
     const ms = this.endDate.getTime() - this.startDate.getTime();
@@ -121,6 +139,7 @@ tripSchema.pre("save", function (next) {
 tripSchema.methods.toJSON = function toJSON() {
   const obj = this.toObject();
   delete obj.__v;
+  delete obj.updatedAt;
   return obj;
 };
 
