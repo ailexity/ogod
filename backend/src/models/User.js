@@ -2,23 +2,40 @@
 
 const mongoose = require('mongoose');
 
-const ROLES = ['poster', 'admin'];
+const ROLES = [
+  'poster',
+  'traveler',
+  'admin',
+];
 
 const userSchema = new mongoose.Schema(
   {
     name: { type: String, required: true, trim: true, maxlength: 120 },
     // Stored normalized (digits only, with country code, e.g. 919876543210).
-    mobile: {
-      type: String,
-      required: true,
-      unique: true,
-      index: true,
-      trim: true,
-    },
+mobile: {
+  type: String,
+  required: true,
+  unique: true,
+  index: true,
+  trim: true,
+  match: /^[0-9]{10,15}$/,
+},
     organizationName: { type: String, trim: true, maxlength: 160 },
+    profilePhoto: {
+    type: String,
+    default: "",
+},
     role: { type: String, enum: ROLES, default: 'poster', index: true },
     // A user becomes verified the first time they complete OTP.
-    isVerified: { type: Boolean, default: false },
+    isVerified: {
+    type: Boolean,
+    default: false,
+},
+
+lastLogin: {
+  type: Date,
+  default: null,
+},
   },
   { timestamps: true }
 );
