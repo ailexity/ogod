@@ -18,7 +18,7 @@ async function connectDB() {
     );
   }
 
-  mongoose.set('strictQuery', true);
+  mongoose.set('strictQuery', false);
 
   mongoose.connection.on('connected', () => logger.info('MongoDB connected'));
   mongoose.connection.on('error', (err) => logger.error('MongoDB error', err.message));
