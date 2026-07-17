@@ -10,7 +10,7 @@ const ROLES = [
 
 const userSchema = new mongoose.Schema(
   {
-    name: { type: String, required: true, trim: true, maxlength: 120 },
+    name: { type: String, required: true, trim: true, minlength: 3, maxlength: 120 },
     // Stored normalized (digits only, with country code, e.g. 919876543210).
 mobile: {
   type: String,
@@ -27,15 +27,22 @@ mobile: {
 },
     role: { type: String, enum: ROLES, default: 'poster', index: true },
     // A user becomes verified the first time they complete OTP.
-    isVerified: {
+    isVerified: 
+    {
     type: Boolean,
     default: false,
-},
+     },
 
-lastLogin: {
+lastLogin: 
+{
   type: Date,
   default: null,
 },
+    refreshToken:
+    {
+    type: String,
+    default: null
+     },
   },
   { timestamps: true }
 );
