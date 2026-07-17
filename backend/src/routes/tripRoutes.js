@@ -30,9 +30,41 @@ router.post(
 
 router.get('/:id', optionalAuth, controller.getTrip);
 
-router.patch('/:id', requireAuth, validate(updateTripSchema), controller.updateTrip);
-router.post('/:id/pause', requireAuth, controller.pauseTrip);
-router.post('/:id/resume', requireAuth, controller.resumeTrip);
-router.delete('/:id', requireAuth, controller.deleteTrip);
+router.patch
+  (
+    '/:id',
+    requireAuth,
+    requireRole('poster', 'admin'),
+    validate(updateTripSchema),
+    controller.updateTrip
+  );
+router.post
+  (
+    '/:id/pause',
+    requireAuth,
+    requireRole('poster', 'admin'),
+    controller.pauseTrip
+  );
+router.post
+  (
+    '/:id/resume',
+    requireAuth,
+    requireRole('poster', 'admin'),
+    controller.resumeTrip
+  );
+router.delete
+  (
+    '/:id',
+    requireAuth,
+    requireRole('poster', 'admin'),
+    controller.deleteTrip
+   );
+router.post
+  (
+    '/:id/upload',
+    requireAuth,
+    requireRole('poster', 'admin'),
+    controller.uploadTripImages
+   );
 
 module.exports = router;
