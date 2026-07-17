@@ -8,10 +8,25 @@ const ApiError = require('../utils/ApiError');
  */
 function requireRole(...roles) {
   return function roleGuard(req, _res, next) {
-    if (!req.user) return next(ApiError.unauthorized());
-    if (!roles.includes(req.user.role)) {
-      return next(ApiError.forbidden('You do not have access to this resource'));
+
+    if (roles.length === 0) {
+      return next(ApiError.internal("No roles configured."));
     }
+
+    if (!req.user) {
+      return next(ApiError.unauthorized());
+    }
+
+    const userRole = (req.user.role || "").toLowerCase();
+
+    if (!roles.map(r => r.toLowerCase()).includes(userRole)) {
+      return next(
+        ApiError.forbidden(
+          `Access denied. Required role: ${roles.join(", ")}`
+        )
+      );
+    }
+
     return next();
   };
 }
