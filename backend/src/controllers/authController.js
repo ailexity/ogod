@@ -13,7 +13,13 @@ const { signToken } = require('../services/tokenService');
  * Sends (or logs, in dev) an OTP to the given mobile.
  */
 const requestOtp = asyncHandler(async (req, res) => {
-  const result = await otpService.requestOtp(req.body.mobile);
+  const { mobile } = req.body;
+
+if (!mobile) {
+    throw ApiError.badRequest("Mobile number is required");
+}
+
+const result = await otpService.requestOtp(mobile);
   return ok(res, {
     mobile: result.mobile,
     expiresInSeconds: result.expiresInSeconds,
@@ -31,7 +37,17 @@ const requestOtp = asyncHandler(async (req, res) => {
  * Verifies the OTP, creates the poster on first login, returns a JWT.
  */
 const verifyOtp = asyncHandler(async (req, res) => {
-  const { code, name, organizationName } = req.body;
+const {
+  code,
+  name,
+  organizationName,
+  role = "poster"
+} = req.body;
+  
+  if (!req.body.mobile || !code)
+  {
+    throw ApiError.badRequest("Mobile and OTP are required");
+ }
   const { mobile } = await otpService.verifyOtp(req.body.mobile, code);
 
   let user = await User.findOne({ mobile });
@@ -48,7 +64,7 @@ const verifyOtp = asyncHandler(async (req, res) => {
       mobile,
       name,
       organizationName,
-      role: 'poster',
+      role,
       isVerified: true,
     });
   } else if (!user.isVerified) {
@@ -57,9 +73,19 @@ const verifyOtp = asyncHandler(async (req, res) => {
     if (organizationName !== undefined) user.organizationName = organizationName;
     await user.save();
   }
-
+  user.lastLogin = new Date();
+  await user.save();
   const token = signToken(user);
-  return ok(res, { token, user, isNewUser });
+  return ok(res, {
+    token,
+    isNewUser,
+    user: {
+        id: user._id,
+        name: user.name,
+        mobile: user.mobile,
+        organizationName: user.organizationName,
+        role: user.role
+    }
 });
 
 /** GET /api/auth/me — current authenticated user. */
