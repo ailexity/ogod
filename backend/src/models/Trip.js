@@ -55,12 +55,35 @@ const tripSchema = new mongoose.Schema(
     seatsRemaining: { type: Number, min: 0 },
 
     description: { type: String, trim: true, maxlength: 5000 },
+    meetingPoint: {
+    type: String,
+    trim: true,
+     default: "",
+    },
+
+meetingTime: {
+  type: String,
+  default: "",
+},
     itinerary: { type: [itineraryDaySchema], default: [] },
 
     coverPhotoUrl: { type: String, required: true },
     galleryUrls: { type: [String], default: [] },
+    thumbnailUrl: {
+    type: String,
+     default: "",
+},
 
     status: { type: String, enum: TRIP_STATUS, default: 'live', index: true },
+    views: {
+    type: Number,
+    default: 0,
+},
+
+bookings: {
+  type: Number,
+  default: 0,
+},
   },
   { timestamps: true }
 );
@@ -80,6 +103,19 @@ tripSchema.pre('validate', function preValidate(next) {
     this.durationDays = Math.max(1, Math.round(ms / 86400000) + 1);
   }
   next();
+});
+tripSchema.pre("save", function (next) {
+
+    if (this.seatsRemaining < 0) {
+        this.seatsRemaining = 0;
+    }
+
+    if (this.seatsRemaining > this.totalSeats) {
+        this.seatsRemaining = this.totalSeats;
+    }
+
+    next();
+
 });
 
 tripSchema.methods.toJSON = function toJSON() {
