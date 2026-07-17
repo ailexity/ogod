@@ -11,8 +11,23 @@ const otpSchema = new mongoose.Schema(
     mobile: { type: String, required: true, index: true },
     codeHash: { type: String, required: true },
     attempts: { type: Number, default: 0 },
+    ipAddress:
+    {
+      type: String,
+       default: "",
+    },
+    userAgent: 
+    {
+     type: String,
+     default: "",
+    },
     // Purpose lets us reuse the collection for future flows (login, change-mobile).
-    purpose: { type: String, default: 'login' },
+purpose:
+{
+  type: String,
+  enum: ["login", "register", "change-mobile", "reset-password"],
+  default: "login",
+},
     expiresAt: { type: Date, required: true },
   },
   { timestamps: true }
