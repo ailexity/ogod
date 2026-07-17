@@ -13,13 +13,15 @@ const ApiError = require('../utils/ApiError');
 function validate(schema, source = 'body') {
   return function validator(req, _res, next) {
     try {
-      req[source] = schema.parse(req[source]);
+    const data = req[source] ?? {};
+    req[source] = schema.parse(data);
       next();
     } catch (err) {
       if (err instanceof ZodError) {
         const details = err.issues.map((i) => ({
           path: i.path.join('.'),
           message: i.message,
+          received: i.input,
         }));
         return next(ApiError.badRequest('Validation failed', details));
       }
