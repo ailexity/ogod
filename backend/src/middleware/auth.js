@@ -5,10 +5,15 @@ const User = require('../models/User');
 const ApiError = require('../utils/ApiError');
 const asyncHandler = require('../utils/asyncHandler');
 
+
 function extractToken(req) {
-  const header = req.headers.authorization || '';
-  if (header.startsWith('Bearer ')) return header.slice(7).trim();
-  return null;
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader) return null;
+
+  if (!authHeader.startsWith("Bearer ")) return null;
+
+  return authHeader.substring(7).trim();
 }
 
 /**
@@ -26,11 +31,22 @@ const requireAuth = asyncHandler(async (req, _res, next) => {
     throw ApiError.unauthorized('Invalid or expired token');
   }
 
-  const user = await User.findById(decoded.sub);
-  if (!user) throw ApiError.unauthorized('Account no longer exists');
+ const user = await User.findById(decoded.sub);
+
+if (!user) 
+{
+  throw ApiError.unauthorized("Account no longer exists");
+}
+
+if (!user.isVerified)
+{
+  throw ApiError.unauthorized("Account is not verified");
+}
 
   req.auth = decoded;
   req.user = user;
+  user.lastLogin = new Date();
+  await user.save();
   next();
 });
 
