@@ -8,9 +8,22 @@ const mongoose = require('mongoose');
  */
 const otpSchema = new mongoose.Schema(
   {
-    mobile: { type: String, required: true, index: true },
+   mobile: 
+  {
+    type: String,
+    required: true,
+    trim: true,
+    index: true,
+    match: /^[0-9]{11,15}$/
+  },
     codeHash: { type: String, required: true },
-    attempts: { type: Number, default: 0 },
+   attempts: 
+   {
+    type: Number,
+    default: 0,
+    min: 0,
+    max: 10
+   },
     ipAddress:
     {
       type: String,
@@ -24,10 +37,14 @@ const otpSchema = new mongoose.Schema(
     // Purpose lets us reuse the collection for future flows (login, change-mobile).
 purpose:
 {
-  type: String,
-  enum: ["login", "register", "change-mobile", "reset-password"],
-  default: "login",
-},
+    type: String,
+    enum: [
+        'login',
+        'change-mobile',
+        'forgot-password'
+    ],
+    default: 'login'
+ },
     expiresAt: { type: Date, required: true },
   },
   { timestamps: true }
@@ -35,5 +52,24 @@ purpose:
 
 // TTL index: document is deleted once `expiresAt` passes.
 otpSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+otpSchema.index
+  (
+    {
+        mobile: 1,
+        purpose: 1
+    },
+    {
+        unique: true
+    }
+);
+otpSchema.methods.toJSON = function ()
+{
+    const obj = this.toObject();
+
+    delete obj.__v;
+    delete obj.codeHash;
+
+    return obj;
+};
 
 module.exports = mongoose.model('Otp', otpSchema);
