@@ -15,14 +15,32 @@ const leadSchema = new mongoose.Schema(
     tripTitle: { type: String, trim: true },
 
     travelerName: { type: String, required: true, trim: true, maxlength: 120 },
-    travelerMobile: { type: String, required: true, trim: true },
+   travelerMobile:
+   {
+    type: String,
+    required: true,
+    trim: true,
+    match: /^[0-9]{10,15}$/,
+   },
     destinationInterest: { type: String, trim: true },
     requirements: { type: String, trim: true, maxlength: 1000 },
+    status: 
+    {
+     type: String,
+     enum: ["new", "contacted", "converted", "closed"],
+     default: "new",
+     index: true,
+    },
+    source: 
+    {
+     type: String,
+     default: "mobile-app",
+    },
   },
   { timestamps: true }
 );
 
 // Common admin filters: by date, by trip, by poster.
-leadSchema.index({ createdAt: -1 });
+leadSchema.index({ createdAt: -1, posterId: 1});
 
 module.exports = mongoose.model('Lead', leadSchema);
