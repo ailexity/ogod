@@ -15,5 +15,12 @@ const router = express.Router();
 router.get('/', optionalAuth, controller.listCategories);
 router.post('/', requireAuth, requireRole('admin'), validate(createCategorySchema), controller.createCategory);
 router.patch('/:slug', requireAuth, requireRole('admin'), validate(updateCategorySchema), controller.updateCategory);
+router.delete
+  (
+    '/:slug',
+    requireAuth,
+    requireRole('admin'),
+    controller.deleteCategory
+  );
 
 module.exports = router;
