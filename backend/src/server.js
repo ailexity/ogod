@@ -34,4 +34,13 @@ process.on('unhandledRejection', (reason) => {
   logger.error('Unhandled rejection:', reason);
 });
 
+process.on('uncaughtException', (error) => {
+  logger.error('Uncaught Exception:', error);
+  process.exit(1);
+});
+
+process.on('warning', (warning) => {
+  logger.warn(`Warning: ${warning.name} - ${warning.message}`);
+});
+
 start();
