@@ -15,7 +15,19 @@ const listCategories = asyncHandler(async (req, res) => {
 
 /** POST /api/categories  (admin) */
 const createCategory = asyncHandler(async (req, res) => {
-  const exists = await Category.findOne({ slug: req.body.slug });
+  const { slug, label } = req.body;
+
+  if (!slug || !label)
+  {
+  throw ApiError.badRequest(
+    "Category slug and label are required."
+  );
+  }
+  req.body.slug = req.body.slug.toLowerCase().trim();
+
+  const exists = await Category.findOne({
+  slug: req.body.slug,
+});
   if (exists) throw ApiError.conflict(`Category "${req.body.slug}" already exists`);
   const category = await Category.create(req.body);
   return created(res, { category });
@@ -25,6 +37,9 @@ const createCategory = asyncHandler(async (req, res) => {
 const updateCategory = asyncHandler(async (req, res) => {
   const category = await Category.findOneAndUpdate(
     { slug: req.params.slug.toLowerCase() },
+    if (req.body.slug) {
+  req.body.slug = req.body.slug.toLowerCase().trim();
+}
     req.body,
     { new: true, runValidators: true }
   );
@@ -32,4 +47,19 @@ const updateCategory = asyncHandler(async (req, res) => {
   return ok(res, { category });
 });
 
-module.exports = { listCategories, createCategory, updateCategory };
+const deleteCategory = asyncHandler(async (req, res) => {
+
+  const category = await Category.findOneAndUpdate(
+      { slug: req.params.slug },
+      { active: false },
+      { new: true }
+  );
+
+  if (!category)
+      throw ApiError.notFound("Category not found");
+
+  return ok(res, { category });
+
+});
+
+module.exports = { listCategories, createCategory, updateCategory, deleteCategory };
