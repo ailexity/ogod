@@ -37,7 +37,6 @@ function errorHandler(err, req, res, _next) {
     statusCode = 400;
     message = `Invalid ${err.path}: ${err.value}`;
   }
-}
   else if (err.name === "JsonWebTokenError") 
   {
   statusCode = 401;
