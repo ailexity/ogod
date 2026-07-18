@@ -14,13 +14,17 @@ const { sendOtpSms } = require('./smsService');
  */
 function normalizeMobile(raw) {
   if (!raw) throw ApiError.badRequest('Mobile number is required');
+
   let digits = String(raw).replace(/\D/g, '');
-  if (digits.length === 10) digits = `91${digits}`;
- if (!/^[0-9]{11,15}$/.test(digits)) 
-{
- {
+
+  if (digits.length === 10) {
+    digits = `91${digits}`;
+  }
+
+  if (!/^[0-9]{11,15}$/.test(digits)) {
     throw ApiError.badRequest('Invalid mobile number');
   }
+
   return digits;
 }
 
