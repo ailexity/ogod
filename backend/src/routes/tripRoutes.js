@@ -59,12 +59,6 @@ router.delete
     requireRole('poster', 'admin'),
     controller.deleteTrip
    );
-router.post
-  (
-    '/:id/upload',
-    requireAuth,
-    requireRole('poster', 'admin'),
-    controller.uploadTripImages
-   );
+
 
 module.exports = router;
