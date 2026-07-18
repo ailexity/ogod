@@ -33,11 +33,10 @@ router.post
 router.post
   (
     '/verify-otp',
-    loginLimiter,
+    otpLimiter,
     validate(verifyOtpSchema),
     controller.verifyOtp
   );
-router.post('/refresh-token', controller.refreshToken);
 router.get('/me', requireAuth, controller.me);
 router.patch('/me', requireAuth, validate(updateProfileSchema), controller.updateMe);
 router.post('/logout', requireAuth, controller.logout);
