@@ -65,7 +65,7 @@ app.get('/api/health', (_req, res) =>
   res.json({ success: true, data: { status: 'ok', uptime: process.uptime(), env: env.nodeEnv } })
 );
 
-app.use('/api/v1', apiRoutes);
+app.use('/api', apiRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
