@@ -35,15 +35,20 @@ const createCategory = asyncHandler(async (req, res) => {
 
 /** PATCH /api/categories/:slug  (admin) */
 const updateCategory = asyncHandler(async (req, res) => {
+  if (req.body.slug) {
+    req.body.slug = req.body.slug.toLowerCase().trim();
+  }
+
   const category = await Category.findOneAndUpdate(
     { slug: req.params.slug.toLowerCase() },
-    if (req.body.slug) {
-  req.body.slug = req.body.slug.toLowerCase().trim();
-}
     req.body,
     { new: true, runValidators: true }
   );
-  if (!category) throw ApiError.notFound('Category not found');
+
+  if (!category) {
+    throw ApiError.notFound('Category not found');
+  }
+
   return ok(res, { category });
 });
 
