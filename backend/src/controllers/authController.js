@@ -96,12 +96,13 @@ const
     token,
     isNewUser,
     user: {
-        id: user._id,
-        name: user.name,
-        mobile: user.mobile,
-        organizationName: user.organizationName,
-        role: user.role
-    }
+      id: user._id,
+      name: user.name,
+      mobile: user.mobile,
+      organizationName: user.organizationName,
+      role: user.role,
+    },
+  });
 });
 
 
@@ -130,4 +131,12 @@ const updateMe = asyncHandler(async (req, res) => {
 
 });
 
-module.exports = { requestOtp, resend, verifyOtp, me, updateMe, logout };
+module.exports =
+{
+  requestOtp,
+  resendOtp,
+  verifyOtp,
+  me,
+  updateMe,
+  logout,
+};
