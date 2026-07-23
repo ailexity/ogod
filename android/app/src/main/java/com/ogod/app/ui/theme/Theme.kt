@@ -22,7 +22,7 @@ private val OgodColorScheme = darkColorScheme(
 fun OgodTheme(content: @Composable () -> Unit) {
     MaterialTheme(
         colorScheme = OgodColorScheme,
-        typography = Typography(),
+       typography = OgodTypography,
         content = content
     )
 }
