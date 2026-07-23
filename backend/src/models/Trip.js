@@ -22,8 +22,21 @@ const geoSchema = new mongoose.Schema(
   {
     type: { type: String, enum: ['Point'], default: 'Point' },
     // [longitude, latitude]
-    coordinates: { type: [Number], default: undefined },
-  },
+   coordinates:
+{
+    type: [Number],
+    default: undefined,
+    validate: 
+    {
+        validator(value) 
+        {
+            if (!value) return true;
+            return value.length === 2;
+        },
+        message: "Coordinates must contain longitude and latitude."
+    }
+},
+},
   { _id: false }
 );
 
@@ -74,8 +87,21 @@ meetingTime: {
     itinerary: { type: [itineraryDaySchema], default: [] },
 
     coverPhotoUrl: { type: String, required: true },
-    galleryUrls: { type: [String], default: [] },
-    thumbnailUrl: {
+    galleryUrls: 
+  {
+    type: [String],
+    default: [],
+    validate: 
+    {
+        validator(arr)
+        {
+            return arr.length <= 10;
+        },
+        message: "Maximum 10 gallery images allowed."
+    }
+},
+    thumbnailUrl: 
+{
     type: String,
      default: "",
 },
@@ -115,8 +141,15 @@ tripSchema.pre('validate', function preValidate(next) {
     return next(
         new Error("Remaining seats cannot exceed total seats")
     );
+    if (this.endDate < this.startDate) 
+    {
+    return next(
+        new Error("End date cannot be before start date")
+    );
+    }
   }
-  if (!this.durationDays && this.startDate && this.endDate) {
+  if (!this.durationDays && this.startDate && this.endDate)
+  {
     const ms = this.endDate.getTime() - this.startDate.getTime();
     this.durationDays = Math.max(1, Math.round(ms / 86400000) + 1);
   }
@@ -136,13 +169,37 @@ tripSchema.pre("save", function (next) {
 
 });
 
-tripSchema.methods.toJSON = function toJSON() {
-  const obj = this.toObject();
-  delete obj.__v;
-  delete obj.updatedAt;
-  return obj;
+tripSchema.methods.toJSON = function () 
+{
+    const obj = this.toObject({
+        virtuals: true
+    });
+
+    delete obj.__v;
+
+    return obj;
+};
 };
 
 tripSchema.statics.STATUS = TRIP_STATUS;
+tripSchema.virtual("isAvailable").get(function () 
+{
+    return
+    (
+        this.status === "live" &&
+        this.seatsRemaining > 0
+    );
+});
+tripSchema.index
+({
+    category: 1,
+    status: 1
+});
+
+tripSchema.index
+({
+    startDate: 1,
+    status: 1
+});
 
 module.exports = mongoose.model('Trip', tripSchema);
