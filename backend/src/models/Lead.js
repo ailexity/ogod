@@ -24,6 +24,11 @@ const leadSchema = new mongoose.Schema(
    },
     destinationInterest: { type: String, trim: true },
     requirements: { type: String, trim: true, maxlength: 1000 },
+    whatsappMessage:
+{
+    type: String,
+    default: ""
+},
     status: 
     {
      type: String,
@@ -31,6 +36,11 @@ const leadSchema = new mongoose.Schema(
      default: "new",
      index: true,
     },
+    contactedAt:
+{
+    type: Date,
+    default: null
+},
     source: 
     {
      type: String,
@@ -42,5 +52,24 @@ const leadSchema = new mongoose.Schema(
 
 // Common admin filters: by date, by trip, by poster.
 leadSchema.index({ createdAt: -1, posterId: 1});
+leadSchema.index
+({
+    tripId: 1,
+    createdAt: -1
+});
+
+leadSchema.index
+({
+    status: 1,
+    createdAt: -1
+});
+leadSchema.methods.toJSON = function () 
+{
+    const obj = this.toObject();
+
+    delete obj.__v;
+
+    return obj;
+};
 
 module.exports = mongoose.model('Lead', leadSchema);
