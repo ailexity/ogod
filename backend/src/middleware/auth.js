@@ -45,8 +45,6 @@ if (!user.isVerified)
 
   req.auth = decoded;
   req.user = user;
-  user.lastLogin = new Date();
-  await user.save();
   next();
 });
 
@@ -59,6 +57,12 @@ const optionalAuth = asyncHandler(async (req, _res, next) => {
   if (!token) return next();
   try {
     const decoded = verifyToken(token);
+    if (decoded.type && decoded.type !== "access")
+{
+    throw ApiError.unauthorized(
+        "Access token required."
+    );
+}
     const user = await User.findById(decoded.sub);
     if (user) {
       req.auth = decoded;
@@ -70,4 +74,34 @@ const optionalAuth = asyncHandler(async (req, _res, next) => {
   next();
 });
 
-module.exports = { requireAuth, optionalAuth };
+  const authorize =
+    (...roles) =>
+    (req, res, next) =>
+{
+    if (!req.user)
+    {
+        return next(
+            ApiError.unauthorized(
+                "Authentication required."
+            )
+        );
+    }
+
+    if (!roles.includes(req.user.role))
+    {
+        return next(
+            ApiError.forbidden(
+                "You are not authorized to access this resource."
+            )
+        );
+    }
+
+    next();
+};
+
+module.exports =
+{
+    requireAuth,
+    optionalAuth,
+    authorize
+};
