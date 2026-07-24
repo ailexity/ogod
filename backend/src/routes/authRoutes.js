@@ -4,7 +4,7 @@ const express = require('express');
 const rateLimit = require('express-rate-limit');
 const controller = require('../controllers/authController');
 const validate = require('../middleware/validate');
-const { requireAuth, requireRole } = require('../middleware/auth');
+const { requireAuth, authorize } = require('../middleware/auth');
 const {
   requestOtpSchema,
   verifyOtpSchema,
@@ -37,8 +37,19 @@ router.post
     validate(verifyOtpSchema),
     controller.verifyOtp
   );
-router.get('/me', requireAuth, controller.me);
+router.get
+(
+    "/admin/profile",
+    requireAuth,
+    authorize("admin"),
+    controller.me
+);
 router.patch('/me', requireAuth, validate(updateProfileSchema), controller.updateMe);
+router.post
+(
+    "/refresh-token",
+    controller.refreshToken
+);
 router.post('/logout', requireAuth, controller.logout);
 
 module.exports = router;
