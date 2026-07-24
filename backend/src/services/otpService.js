@@ -62,11 +62,27 @@ if (
   const expiresAt = new Date(Date.now() + env.otp.ttlSeconds * 1000);
 
   // One active OTP per mobile — replace any previous one.
-  await Otp.findOneAndUpdate(
-    { mobile, purpose: 'login' },
-    { mobile, purpose: 'login', codeHash, attempts: 0, expiresAt },
-    { upsert: true, new: true, setDefaultsOnInsert: true }
-  );
+try {
+    await Otp.findOneAndUpdate(
+        { mobile, purpose: "login" },
+        {
+            mobile,
+            purpose: "login",
+            codeHash,
+            attempts: 0,
+            expiresAt
+        },
+        {
+            upsert: true,
+            new: true,
+            setDefaultsOnInsert: true
+        }
+    );
+} 
+catch (err) 
+{
+    throw ApiError.internal("Unable to generate OTP.");
+}
 
   try {
         await sendOtpSms(mobile, code);
@@ -94,11 +110,14 @@ if (
 async function verifyOtp(rawMobile, submittedCode) {
   const mobile = normalizeMobile(rawMobile);
   if (!submittedCode) throw ApiError.badRequest('OTP code is required');
-  if (!/^[0-9]{6}$/.test(String(submittedCode))) 
-  {
+  const otpRegex = new RegExp(`^[0-9]{${env.otp.length}}$`);
+
+if (!otpRegex.test(String(submittedCode)))
+{
     throw ApiError.badRequest(
-        "OTP must be exactly 6 digits."
+        `OTP must be exactly ${env.otp.length} digits.`
     );
+}
   }
   const record = await Otp.findOne({ mobile, purpose: 'login' });
   if (!record) throw ApiError.badRequest('No OTP requested for this number, or it expired');
@@ -112,7 +131,12 @@ async function verifyOtp(rawMobile, submittedCode) {
     await record.deleteOne();
     throw ApiError.tooMany('Too many incorrect attempts, please request a new OTP');
   }
-
+  const otp = String(submittedCode).trim();
+  const matches = await bcrypt.compare
+(
+    otp,
+    record.codeHash
+);
   const matches = await bcrypt.compare(String(submittedCode), record.codeHash);
   if (!matches) {
     record.attempts += 1;
@@ -121,10 +145,10 @@ async function verifyOtp(rawMobile, submittedCode) {
   }
 
   await record.deleteOne();
-  console.log
-    (
-    `OTP verified successfully for ${mobile}`
-    );
+  if (env.nodeEnv !== "production") 
+{
+    console.log(`OTP verified successfully for ${mobile}`);
+}
   return { mobile };
 }
 
