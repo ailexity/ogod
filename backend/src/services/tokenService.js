@@ -12,7 +12,8 @@ function signToken(user)
 return jwt.sign(
     {
         sub: String(user._id),
-        role: user.role
+        role: user.role,
+        type: "access"
     },
     env.jwt.secret,
     {
@@ -26,11 +27,12 @@ function signRefreshToken(user)
 {
     return jwt.sign(
         {
-            sub: String(user._id)
+            sub: String(user._id),
+            type: "refresh"
         },
         env.jwt.secret,
         {
-            expiresIn: "30d",
+            expiresIn: env.jwt.refreshExpiresIn || "30d",
             issuer: "Ogod",
             audience: "Ogod-Mobile-App"
         }
@@ -45,11 +47,12 @@ function verifyToken(token)
             audience: "Ogod-Mobile-App"
         });
     } 
-    catch (error) 
-    {
-        error.statusCode = 401;
-        throw error;
-    }
+   catch (error)
+{
+    const err = new Error("Invalid or expired token");
+    err.statusCode = 401;
+    throw err;
+}
 }
 
 module.exports =
