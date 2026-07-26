@@ -179,7 +179,7 @@ tripSchema.methods.toJSON = function ()
 
     return obj;
 };
-};
+
 
 tripSchema.statics.STATUS = TRIP_STATUS;
 tripSchema.virtual("isAvailable").get(function () 
