@@ -12,7 +12,14 @@ const {
 
 const router = express.Router();
 
-router.get('/', optionalAuth, controller.listCategories);
+router.get('/', controller.listCategories);
+router.get
+(
+    '/:slug',
+    optionalAuth,
+    controller.getCategory
+);
+
 router.post('/', requireAuth, requireRole('admin'), validate(createCategorySchema), controller.createCategory);
 router.patch('/:slug', requireAuth, requireRole('admin'), validate(updateCategorySchema), controller.updateCategory);
 router.delete
