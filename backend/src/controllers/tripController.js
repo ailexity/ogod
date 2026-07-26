@@ -86,7 +86,7 @@ if (req.query.destination) {
   if (near) {
     const [lng, lat] = String(near).split(',').map(Number);
     if (Number.isFinite(lng) && Number.isFinite(lat)) {
-      filter['destination.geo'] = {
+      filter.geo = {
         $near: {
           $geometry: { type: 'Point', coordinates: [lng, lat] },
           $maxDistance: (radiusKm || 100) * 1000,
@@ -188,10 +188,17 @@ if (
         "End date must be after start date."
     );
    }
-  if (
-    new Date(payload.startDate)
-    < new Date()
-)
+const today = new Date();
+today.setHours(0,0,0,0);
+
+const startDate = new Date(payload.startDate);
+startDate.setHours(0,0,0,0);
+
+if (startDate < today) {
+    throw ApiError.badRequest(
+        "Trip cannot start in the past."
+    );
+}
 {
     throw ApiError.badRequest(
         "Trip cannot start in the past."
@@ -208,7 +215,7 @@ if (
         "Total seats must be greater than zero."
     );
   }
-}
+
 
 payload.seatsRemaining = payload.totalSeats; 
 let geo = payload.geo;
@@ -225,9 +232,9 @@ if (!geo && payload.destinationName)
                 location.lat
             ]
         };
-    } catch (err) {
-        console.error("Geocoding failed:", err.message);
-    }
+    } throw ApiError.badRequest(
+    "Unable to locate the destination."
+);
 }
   const trip = await Trip.create({
     ...payload,
