@@ -42,6 +42,12 @@ function errorHandler(err, req, res, _next) {
   statusCode = 401;
   message = "Invalid authentication token";
  } 
+  else if (err.code === 11000) 
+  {
+    statusCode = 409;
+    const field = Object.keys(err.keyValue || {})[0] || 'field';
+    message = `A record with that ${field} already exists`;
+  }
 else if (err.name === "MongoServerError")
 {
   statusCode = 500;
@@ -52,14 +58,6 @@ else if (err.name === "MongoServerError")
   statusCode = 401;
   message = "Authentication token has expired";
   }
-  else if (err.code === 11000) 
-  {
-    // Mongo duplicate key
-    statusCode = 409;
-    const field = Object.keys(err.keyValue || {})[0] || 'field';
-    message = `A record with that ${field} already exists`;
-  }
-
   if (statusCode >= 500) 
   {
     logger.error({
