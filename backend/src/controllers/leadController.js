@@ -13,7 +13,7 @@ const Trip = require('../models/Trip');
 function buildContactLinks(trip, poster) {
   const mobile = poster?.mobile;
   const text = encodeURIComponent(
-    `Hi! I'm interested in your trip "${trip.title}" (${trip.destinationName}) on Ogod.`
+    `Hi! I'm interested in your trip "${trip.title}" (${trip.destination?.name}) on Ogod.`
   );
   return {
     whatsapp: mobile ? `https://wa.me/${mobile}?text=${text}` : null,
@@ -74,7 +74,7 @@ if (existingLead) {
     tripTitle: trip.title,
     travelerName,
     travelerMobile,
-    destinationInterest: destinationInterest || trip.destinationName,
+    destinationInterest: destinationInterest || trip.destination?.name,
     requirements,
   });
 
@@ -119,7 +119,7 @@ const listLeads = asyncHandler(async (req, res) => {
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(pageSize)
-      .populate('tripId', 'title category destinationName')
+      .populate('tripId', 'title category destination')
       .populate('posterId', 'name organizationName mobile')
       .lean(),
     Lead.countDocuments(filter),
@@ -179,7 +179,7 @@ const exportLeads = asyncHandler(async (req, res) => {
       l.travelerMobile,
       l.tripTitle || l.tripId?.title,
       l.tripId?.category,
-      l.destinationInterest || l.tripId?.destinationName,
+      l.destinationInterest || l.tripId?.destination?.name,
       l.requirements,
     ]
       .map(escape)
