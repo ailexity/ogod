@@ -27,12 +27,47 @@ function buildContactLinks(trip, poster) {
  * Traveler submits the inquiry form. Saves the lead, then returns the poster's
  * WhatsApp/call links so the client can reveal the contact CTAs.
  */
-const createLead = asyncHandler(async (req, res) => {
-  const { tripId, travelerName, travelerMobile, destinationInterest, requirements } = req.body;
+  const createLead = asyncHandler(async (req, res) => {
+  const 
+  {
+    tripId,
+    travelerName,
+    travelerMobile,
+    destinationInterest,
+    requirements
+  } = req.body;
 
-  const trip = await Trip.findById(tripId).populate('posterId', 'name organizationName mobile');
-  if (!trip || trip.status === 'deleted') throw ApiError.notFound('Trip not found');
+  if (!/^[0-9]{10,15}$/.test(String(travelerMobile).trim()))
+  {
+    throw ApiError.badRequest(
+      "Invalid mobile number."
+    );
+  }
 
+    const trip = await Trip.findById(tripId)
+    .populate('posterId', 'name organizationName mobile');
+ if
+   (
+    !trip ||
+    trip.status === "deleted" ||
+    trip.status === "paused"
+   )
+{
+    throw ApiError.notFound
+    (
+        "Trip is not available."
+    );
+}
+  const existingLead = await Lead.findOne({
+    tripId: trip._id,
+    travelerMobile
+});
+
+if (existingLead) {
+    throw ApiError.conflict(
+        "You have already submitted an inquiry for this trip."
+    );
+}
   const lead = await Lead.create({
     tripId: trip._id,
     posterId: trip.posterId._id,
@@ -73,19 +108,26 @@ const listLeads = asyncHandler(async (req, res) => {
       : { $in: tripIds };
   }
 
-  const skip = (page - 1) * limit;
+  const pageNumber = Math.max(Number(page) || 1, 1);
+  const pageSize = Math.max(Number(limit) || 10, 1);
+
+  const skip = (pageNumber - 1) * pageSize;
   const [items, total] = await Promise.all([
     Lead.find(filter)
       .sort({ createdAt: -1 })
       .skip(skip)
-      .limit(limit)
+      .limit(pageSize)
       .populate('tripId', 'title category destination')
       .populate('posterId', 'name organizationName mobile')
       .lean(),
     Lead.countDocuments(filter),
   ]);
 
-  return paginated(res, items, { page, limit, total });
+  return paginated(res, items, {
+    page: pageNumber,
+    limit: pageSize,
+    total
+});
 });
 
 /**
@@ -153,7 +195,11 @@ const exportLeads = asyncHandler(async (req, res) => {
 const myLeads = asyncHandler(async (req, res) => {
   const leads = await Lead.find({ posterId: req.user._id })
     .sort({ createdAt: -1 })
-    .populate('tripId', 'title destination')
+    .populate
+    (
+    'tripId',
+    'title destination category startDate'
+    )
     .lean();
   return ok(res, { leads });
 });
