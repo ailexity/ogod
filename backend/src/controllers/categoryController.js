@@ -53,19 +53,26 @@ const createCategory = asyncHandler(async (req, res) => {
 
 /** PATCH /api/categories/:slug  (admin) */
 const updateCategory = asyncHandler(async (req, res) => {
-  if (req.body.slug)
-  {
+const currentCategory = await Category.findOne({
+    slug: req.params.slug.toLowerCase()
+});
+
+if (!currentCategory) {
+    throw ApiError.notFound("Category not found");
+}
+
+if (req.body.slug) {
     req.body.slug = req.body.slug.toLowerCase().trim();
-  }
-  if (req.body.slug) 
-  {
+
     const existing = await Category.findOne({
         slug: req.body.slug,
-        _id: { $ne: category?._id }
+        _id: { $ne: currentCategory._id }
     });
 
     if (existing) {
-        throw ApiError.conflict("Category slug already exists.");
+        throw ApiError.conflict(
+            "Category slug already exists."
+        );
     }
 }
 
