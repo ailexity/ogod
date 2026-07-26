@@ -74,7 +74,7 @@ if (
             }
         },
         {
-            destinationName: {
+            destination.name: {
                 $regex: q,
                 $options: "i"
             }
@@ -83,7 +83,7 @@ if (
 }
 
 if (req.query.destination) {
-    filter.destinationName = {
+    filter.destination.name = {
         $regex: req.query.destination,
         $options: "i"
     };
@@ -227,7 +227,7 @@ let geo = payload.geo;
 if (!geo && payload.destinationName) {
     try {
         const location = await geocodeLocation(
-            payload.destinationName
+            payload.destination.name
         );
 
         geo = {
@@ -315,7 +315,7 @@ if (updates.destinationName)
 {
     try {
         const location = await geocodeLocation(
-            updates.destinationName
+            updates.destination.name
         );
 
         updates.geo = {
