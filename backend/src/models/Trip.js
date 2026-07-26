@@ -20,23 +20,34 @@ const itineraryDaySchema = new mongoose.Schema(
 // GeoJSON Point for the destination so we can do "popular near you".
 const geoSchema = new mongoose.Schema(
   {
-    type: { type: String, enum: ['Point'], default: 'Point' },
-    // [longitude, latitude]
-   coordinates:
-{
-    type: [Number],
-    default: undefined,
-    validate: 
-    {
-        validator(value) 
-        {
-            if (!value) return true;
-            return value.length === 2;
+    type: {
+      type: String,
+      enum: ["Point"],
+      default: "Point"
+    },
+
+    coordinates: {
+      type: [Number],
+      default: undefined,
+      validate: {
+        validator(value) {
+          if (!Array.isArray(value) || value.length !== 2) {
+            return false;
+          }
+
+          const [lng, lat] = value;
+
+          return (
+            lng >= -180 &&
+            lng <= 180 &&
+            lat >= -90 &&
+            lat <= 90
+          );
         },
-        message: "Coordinates must contain longitude and latitude."
+        message: "Coordinates must contain valid longitude and latitude."
+      }
     }
-},
-},
+  },
   { _id: false }
 );
 
@@ -136,18 +147,17 @@ tripSchema.pre('validate', function preValidate(next) {
   {
     this.seatsRemaining = this.totalSeats;
   }
-  if (this.seatsRemaining > this.totalSeats)
-  {
+if (this.seatsRemaining > this.totalSeats) {
     return next(
         new Error("Remaining seats cannot exceed total seats")
     );
-    if (this.endDate < this.startDate) 
-    {
+}
+
+if (this.endDate < this.startDate) {
     return next(
         new Error("End date cannot be before start date")
     );
-    }
-  }
+}
   if (!this.durationDays && this.startDate && this.endDate)
   {
     const ms = this.endDate.getTime() - this.startDate.getTime();
@@ -182,13 +192,9 @@ tripSchema.methods.toJSON = function ()
 
 
 tripSchema.statics.STATUS = TRIP_STATUS;
-tripSchema.virtual("isAvailable").get(function () 
-{
-    return
-    (
-        this.status === "live" &&
-        this.seatsRemaining > 0
-    );
+tripSchema.virtual("isAvailable").get(function () {
+    return this.status === "live" &&
+           this.seatsRemaining > 0;
 });
 tripSchema.index
 ({
