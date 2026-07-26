@@ -28,42 +28,38 @@ router.post(
   controller.createTrip
 );
 
-router.get('/:id', optionalAuth, controller.getTrip);
-router.get
-(
+router.get(
     '/search',
     validate(listTripsQuerySchema, 'query'),
     controller.listTrips
 );
-router.get
-(
+
+router.get(
     '/active',
     controller.listTrips
 );
-router.patch
-  (
+
+router.get('/:id', optionalAuth, controller.getTrip);
+router.patch(
     '/:id',
     requireAuth,
     requireRole('poster', 'admin'),
     validate(updateTripSchema),
     controller.updateTrip
   );
-router.post
-  (
+router.post(
     '/:id/pause',
     requireAuth,
     requireRole('poster', 'admin'),
     controller.pauseTrip
   );
-router.post
-  (
+router.post(
     '/:id/resume',
     requireAuth,
     requireRole('poster', 'admin'),
     controller.resumeTrip
   );
-router.delete
-  (
+router.delete(
     '/:id',
     requireAuth,
     requireRole('poster', 'admin'),
