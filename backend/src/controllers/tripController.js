@@ -96,10 +96,10 @@ if (req.query.destination) {
       filter.geo = {
         $near: {
           $geometry: { type: 'Point', coordinates: [lng, lat] },
-          $maxDistance: (radiusKm || 100) * 1000,
         },
-      };
-    }
+           $maxDistance: (radiusKm || 100) * 1000
+      }
+    };
   }
 
 const pageNumber = Math.max(Number(page) || 1, 1);
@@ -216,15 +216,13 @@ if (startDate < today) {
   {
     throw ApiError.badRequest("Invalid trip price.");
   }
-  if (payload.totalSeats < 1)
-  {
+if (payload.totalSeats < 1) {
     throw ApiError.badRequest(
         "Total seats must be greater than zero."
     );
-  }
+}
 
-
-payload.seatsRemaining = payload.totalSeats; 
+payload.seatsRemaining = payload.totalSeats;
 let geo = payload.geo;
 
 if (!geo && payload.destinationName) {
