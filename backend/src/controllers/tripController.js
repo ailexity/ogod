@@ -55,7 +55,14 @@ const listTrips = asyncHandler(async (req, res) => {
 
   // Travelers only ever see live trips. A poster/admin may request other
   // statuses (e.g. their own paused listings) — enforced in myListings/admin.
-  filter.status = status || 'live';
+if (
+    req.user &&
+    (req.user.role === "poster" || req.user.role === "admin")
+) {
+    filter.status = status || "live";
+} else {
+    filter.status = "live";
+}
 
   if (category) filter.category = String(category).toLowerCase();
   if (posterId) filter.posterId = posterId;
@@ -189,10 +196,10 @@ if (
     );
    }
 const today = new Date();
-today.setHours(0,0,0,0);
+today.setHours(0, 0, 0, 0);
 
 const startDate = new Date(payload.startDate);
-startDate.setHours(0,0,0,0);
+startDate.setHours(0, 0, 0, 0);
 
 if (startDate < today) {
     throw ApiError.badRequest(
@@ -220,10 +227,11 @@ if (startDate < today) {
 payload.seatsRemaining = payload.totalSeats; 
 let geo = payload.geo;
 
-if (!geo && payload.destinationName)
-{
+if (!geo && payload.destinationName) {
     try {
-        const location = await geocodeLocation(payload.destinationName);
+        const location = await geocodeLocation(
+            payload.destinationName
+        );
 
         geo = {
             type: "Point",
@@ -232,9 +240,11 @@ if (!geo && payload.destinationName)
                 location.lat
             ]
         };
-    } throw ApiError.badRequest(
-    "Unable to locate the destination."
-);
+    } catch (err) {
+        throw ApiError.badRequest(
+            "Unable to locate the destination."
+        );
+    }
 }
   const trip = await Trip.create({
     ...payload,
