@@ -13,7 +13,7 @@ const Trip = require('../models/Trip');
 function buildContactLinks(trip, poster) {
   const mobile = poster?.mobile;
   const text = encodeURIComponent(
-    `Hi! I'm interested in your trip "${trip.title}" (${trip.destination?.name}) on Ogod.`
+    `Hi! I'm interested in your trip "${trip.title}" (${trip.destinationName}) on Ogod.`
   );
   return {
     whatsapp: mobile ? `https://wa.me/${mobile}?text=${text}` : null,
@@ -74,7 +74,7 @@ if (existingLead) {
     tripTitle: trip.title,
     travelerName,
     travelerMobile,
-    destinationInterest: destinationInterest || trip.destination?.name,
+    destinationInterest: destinationInterest || trip.destinationName,
     requirements,
   });
 
@@ -96,8 +96,10 @@ const listLeads = asyncHandler(async (req, res) => {
   if (destination) filter.destinationInterest = new RegExp(destination, 'i');
   if (from || to) {
     filter.createdAt = {};
-    if (from) filter.createdAt.$gte = from;
-    if (to) filter.createdAt.$lte = to;
+    if (from) 
+      filter.createdAt.$gte = from;
+    if (to) 
+      filter.createdAt.$lte = to;
   }
 
   // Category lives on the trip, not the lead — resolve matching trip ids first.
@@ -117,7 +119,7 @@ const listLeads = asyncHandler(async (req, res) => {
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(pageSize)
-      .populate('tripId', 'title category destination')
+      .populate('tripId', 'title category destinationName')
       .populate('posterId', 'name organizationName mobile')
       .lean(),
     Lead.countDocuments(filter),
@@ -152,7 +154,7 @@ const exportLeads = asyncHandler(async (req, res) => {
 
   const leads = await Lead.find(filter)
     .sort({ createdAt: -1 })
-    .populate('tripId', 'title category destination')
+    .populate('tripId', 'title category destinationName')
     .lean();
 
   const header = [
@@ -177,7 +179,7 @@ const exportLeads = asyncHandler(async (req, res) => {
       l.travelerMobile,
       l.tripTitle || l.tripId?.title,
       l.tripId?.category,
-      l.destinationInterest || l.tripId?.destination?.name,
+      l.destinationInterest || l.tripId?.destinationName,
       l.requirements,
     ]
       .map(escape)
