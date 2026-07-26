@@ -1,5 +1,12 @@
 package com.ogod.app
-
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.ogod.app.viewmodel.TripViewModel
+import com.ogod.app.viewmodel.factory.ViewModelFactory
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.ogod.app.ui.screens.HomeScreen
+import com.ogod.app.viewmodel.TripViewModel
+import com.ogod.app.viewmodel.factory.ViewModelFactory
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -73,9 +80,24 @@ private val navItems = listOf(
 
 @Composable
 private fun OgodApp() {
+
     var selectedIndex by rememberSaveable { mutableIntStateOf(0) }
 
+    val context = androidx.compose.ui.platform.LocalContext.current
+
+    val tripViewModel: TripViewModel = viewModel(
+        factory = ViewModelFactory(context)
+    )
+
     Scaffold(
+        containerColor = OgodColors.Background,
+        bottomBar = {
+            ...
+        }
+    ) {
+        ...
+    }
+}
         containerColor = OgodColors.Background,
         bottomBar = {
             NavigationBar(
@@ -101,7 +123,7 @@ private fun OgodApp() {
         }
     ) { innerPadding ->
         when (selectedIndex) {
-            0 -> HomeScreen(innerPadding)
+            0 -> HomeScreen(tripViewModel)
             1 -> SearchScreen(innerPadding)
             2 -> PostTripScreen(innerPadding)
             else -> ProfileScreen(innerPadding)
@@ -134,14 +156,6 @@ private fun ScreenContainer(
     }
 }
 
-@Composable
-private fun HomeScreen(paddingValues: PaddingValues) {
-    ScreenContainer(paddingValues, "Home") {
-        ShelfHeader("Departing soon")
-        TripPreview("Kedarnath Group Trek", "Pilgrimage", "Starts 18 Jul", "12 seats")
-        TripPreview("Goa Weekend Escape", "Weekend Getaway", "Starts 26 Jul", "8 seats")
-    }
-}
 
 @Composable
 private fun SearchScreen(paddingValues: PaddingValues) {
