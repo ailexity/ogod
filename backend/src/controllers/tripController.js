@@ -62,19 +62,10 @@ const listTrips = asyncHandler(async (req, res) => {
   if (q) {
     filter.$or = [
         {
-            $text:
-            {
+            $text: {
                 $search: q
             }
         },
-      if (req.query.destination)
-{
-    filter.destinationName = 
-    {
-        $regex: req.query.destination,
-        $options: "i"
-    };
-}
         {
             destinationName: {
                 $regex: q,
@@ -82,6 +73,13 @@ const listTrips = asyncHandler(async (req, res) => {
             }
         }
     ];
+}
+
+if (req.query.destination) {
+    filter.destinationName = {
+        $regex: req.query.destination,
+        $options: "i"
+    };
 }
 
   // Geospatial "near" filter: near="lng,lat"
@@ -210,12 +208,7 @@ if (
         "Total seats must be greater than zero."
     );
   }
-  if (payload.pricePerPerson < 0) 
-  {
-    throw ApiError.badRequest(
-        "Price cannot be negative."
-    );
-  }
+}
 
 payload.seatsRemaining = payload.totalSeats; 
 let geo = payload.geo;
@@ -368,13 +361,7 @@ const deleteTrip = asyncHandler(async (req, res) => {
 /** GET /api/trips/mine — the poster's own active + past listings dashboard. */
 const myListings = asyncHandler(async (req, res) =>
   {
-  if (payload.totalSeats <= 0) 
-  {
-  throw ApiError.badRequest(
-    "Total seats must be greater than zero."
-  );
-}
-  const trips = await Trip.find({
+    const trips = await Trip.find({
     posterId: req.user._id,
     status: { $ne: 'deleted' },
   })
