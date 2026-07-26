@@ -29,7 +29,17 @@ router.post(
 );
 
 router.get('/:id', optionalAuth, controller.getTrip);
-
+router.get
+(
+    '/search',
+    validate(listTripsQuerySchema, 'query'),
+    controller.listTrips
+);
+router.get
+(
+    '/active',
+    controller.listTrips
+);
 router.patch
   (
     '/:id',
