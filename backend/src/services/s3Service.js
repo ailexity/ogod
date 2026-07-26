@@ -49,12 +49,15 @@ async function uploadImage(buffer, originalName, kind = 'gallery')
 {
   const extension = path.extname(originalName).toLowerCase();
   const allowedExtensions = 
-  [
+[
     ".jpg",
     ".jpeg",
     ".png",
-    ".webp"
-   ];
+    ".webp",
+    ".gif",
+    ".heic",
+    ".heif"
+];
 
 if (!allowedExtensions.includes(extension)) 
 {
@@ -84,14 +87,32 @@ if (buffer.length > MAX_FILE_SIZE)
    }
 
   const maxWidth = kind === 'cover' ? 1600 : 1200;
+  const metadata = await sharp(buffer).metadata();
+
+if 
+  (
+    metadata.width > 8000 ||
+    metadata.height > 8000
+)
+{
+    const err = new Error
+    (
+        "Image resolution is too large."
+    );
+
+    err.statusCode = 400;
+
+    throw err;
+}
   const processed = await sharp(buffer)
     .rotate() // respect EXIF orientation
     .resize({ width: maxWidth, withoutEnlargement: true })
-    .webp({ quality: 80, effort: 6 })
+    .webp({ quality: 82, effort: 6 })
     .toBuffer({ resolveWithObject: true });
 
   const id = crypto.randomBytes(12).toString('hex');
-  const key = `trips/${kind}/${Date.now()}-${id}.webp`;
+  const year = new Date().getFullYear();
+  const key = `trips/${year}/${kind}/${Date.now()}-${id}.webp`;
 
   try {
     await s3.send(
@@ -100,7 +121,8 @@ if (buffer.length > MAX_FILE_SIZE)
             Key: key,
             Body: processed.data,
             ContentType: "image/webp",
-            CacheControl: "public, max-age=31536000, immutable"
+            CacheControl: "public, max-age=31536000, immutable",
+            ContentDisposition: "inline"
         })
     );
 } 
