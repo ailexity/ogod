@@ -61,10 +61,19 @@ const listTrips = asyncHandler(async (req, res) => {
   if (q) {
     filter.$or = [
         {
-            $text: {
+            $text:
+            {
                 $search: q
             }
         },
+      if (req.query.destination)
+{
+    filter.destinationName = 
+    {
+        $regex: req.query.destination,
+        $options: "i"
+    };
+}
         {
             destinationName: {
                 $regex: q,
@@ -87,19 +96,27 @@ const listTrips = asyncHandler(async (req, res) => {
     }
   }
 
-  const skip = (page - 1) * limit;
+const pageNumber = Math.max(Number(page) || 1, 1);
+const pageSize = Math.max(Number(limit) || 10, 1);
+
+const skip = (pageNumber - 1) * pageSize;
 
   const [items, total] = await Promise.all([
     Trip.find(filter)
       .sort(sortSpec(sort))
       .skip(skip)
-      .limit(limit)
+      .limit(pageSize)
       .populate('posterId', 'name organizationName')
       .lean(),
     Trip.countDocuments(filter),
   ]);
 
-  return paginated(res, items, { page, limit, total });
+  return paginated(res, items, 
+{
+    page: pageNumber,
+    limit: pageSize,
+    total
+});
 });
 
 /**
@@ -147,9 +164,14 @@ const getTrip = asyncHandler(async (req, res) => {
   if (!trip || trip.status === "deleted")
     throw ApiError.notFound("Trip not found");
 
-  trip.views = (trip.views || 0) + 1;
-
-  await trip.save();
+await Trip.findByIdAndUpdate(
+    trip._id,
+    {
+        $inc: {
+            views: 1
+        }
+    }
+);
 
   return ok(res, { trip });
 });
@@ -167,6 +189,15 @@ if (
         "End date must be after start date."
     );
    }
+  if (
+    new Date(payload.startDate)
+    < new Date()
+)
+{
+    throw ApiError.badRequest(
+        "Trip cannot start in the past."
+    );
+}
   // Check price
   if (payload.pricePerPerson < 0) 
   {
@@ -190,6 +221,7 @@ payload.seatsRemaining = payload.totalSeats;
   const trip = await Trip.create({
     ...payload,
     posterId: req.user._id,
+    status: "live",
   });
 
   return created(res, { trip });
@@ -255,6 +287,15 @@ if (updates.totalSeats !== undefined) {
   }
 
   Object.assign(trip, updates);
+  if
+(
+    trip.endDate < trip.startDate
+)
+{
+    throw ApiError.badRequest(
+        "End date cannot be before start date."
+    );
+}
   await trip.save();
   return ok(res, { trip });
 });
@@ -263,6 +304,18 @@ if (updates.totalSeats !== undefined) {
 const setStatus = (status) =>
   asyncHandler(async (req, res) => {
     const trip = await loadOwnedTrip(req);
+    if
+(
+    status === "live" &&
+    trip.endDate < new Date()
+)
+{
+    throw ApiError.badRequest
+    (
+        "Past trips cannot be resumed."
+    );
+}
+
     trip.status = status;
     await trip.save();
     return ok(res, { trip });
