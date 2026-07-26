@@ -14,7 +14,7 @@ const otpSchema = new mongoose.Schema(
     required: true,
     trim: true,
     index: true,
-    match: /^[0-9]{11,15}$/
+    match: /^[0-9]{10,15}$/
   },
     codeHash: { type: String, required: true },
    attempts: 
