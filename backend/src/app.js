@@ -11,6 +11,7 @@ const apiRoutes = require('./routes');
 const { notFound, errorHandler } = require('./middleware/error');
 
 const app = express();
+app.disable('etag');
 
 function isAllowedOrigin(origin) {
   if (env.corsOrigins.includes(origin)) return true;
@@ -46,7 +47,7 @@ app.use(
   })
 );
 
-app.use(express.json({ limit: '1mb' }));
+app.use(express.json({ limit: '5mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.disable("x-powered-by");
 app.use(morgan(env.isProd ? 'combined' : 'dev'));
@@ -64,7 +65,11 @@ app.use(
 app.get('/api/health', (_req, res) =>
   res.json({ success: true, data: { status: 'ok', uptime: process.uptime(), env: env.nodeEnv } })
 );
-
+app.use((req, res, next) => 
+{
+    res.setTimeout(30000);
+    next();
+});
 app.use('/api', apiRoutes);
 
 app.use(notFound);
