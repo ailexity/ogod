@@ -5,6 +5,7 @@ const { ok, created, paginated } = require('../utils/apiResponse');
 const ApiError = require('../utils/ApiError');
 const Trip = require('../models/Trip');
 const Category = require('../models/Category');
+const { geocodeLocation } = require('../services/mapsService');
 
 /** Ensure the category slug exists and is active (open value, not an enum). */
 async function assertCategoryExists(slug) {
@@ -217,9 +218,27 @@ if (
   }
 
 payload.seatsRemaining = payload.totalSeats; 
+let geo = payload.geo;
 
+if (!geo && payload.destinationName)
+{
+    try {
+        const location = await geocodeLocation(payload.destinationName);
+
+        geo = {
+            type: "Point",
+            coordinates: [
+                location.lng,
+                location.lat
+            ]
+        };
+    } catch (err) {
+        console.error("Geocoding failed:", err.message);
+    }
+}
   const trip = await Trip.create({
     ...payload,
+    geo,
     posterId: req.user._id,
     status: "live",
   });
@@ -285,7 +304,24 @@ if (updates.totalSeats !== undefined) {
         "Trip cannot be edited after it has started."
     );
   }
+if (updates.destinationName) 
+{
+    try {
+        const location = await geocodeLocation(
+            updates.destinationName
+        );
 
+        updates.geo = {
+            type: "Point",
+            coordinates: [
+                location.lng,
+                location.lat
+            ]
+        };
+    } catch (err) {
+        console.error("Geocoding failed:", err.message);
+    }
+}
   Object.assign(trip, updates);
   if
 (
