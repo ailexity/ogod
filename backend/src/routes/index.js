@@ -7,6 +7,7 @@ const tripRoutes = require('./tripRoutes');
 const leadRoutes = require('./leadRoutes');
 const categoryRoutes = require('./categoryRoutes');
 const uploadRoutes = require('./uploadRoutes');
+const mapsRoutes = require('./MapsRoutes');
 
 const router = express.Router();
 
@@ -28,5 +29,6 @@ router.use('/trips', tripRoutes);
 router.use('/leads', leadRoutes);
 router.use('/categories', categoryRoutes);
 router.use('/uploads', uploadRoutes);
+router.use('/maps', mapsRoutes);
 
 module.exports = router;
