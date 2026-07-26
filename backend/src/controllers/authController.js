@@ -30,8 +30,22 @@ const result = await otpService.requestOtp(mobile);
       : 'OTP sent to your mobile number.',
   });
 });
-const resendOtp = asyncHandler(async (req, res) => {
-    const result = await otpService.requestOtp(req.body.mobile);
+    const resendOtp = asyncHandler(async (req, res) => {
+    const { mobile } = req.body;
+
+    if (!mobile) {
+        throw ApiError.badRequest("Mobile number is required");
+    }
+
+    const result = await otpService.requestOtp(mobile);
+
+    return ok(res, {
+        mobile: result.mobile,
+        expiresInSeconds: result.expiresInSeconds,
+        devCode: result.devCode,
+        message: "OTP resent successfully."
+    });
+});
 
     return ok(res, {
         mobile: result.mobile,
@@ -76,8 +90,7 @@ const
         { path: 'name', message: 'Required for new accounts' },
       ]);
     }
-    user = await User.create({
-      mobile,
+    user = await User.create({mobile,
       name,
       organizationName,
       role,
