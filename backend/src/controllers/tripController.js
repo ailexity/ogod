@@ -90,17 +90,21 @@ if (req.query.destination) {
 }
 
   // Geospatial "near" filter: near="lng,lat"
-  if (near) {
-    const [lng, lat] = String(near).split(',').map(Number);
+    if (near) {
+    const [lng, lat] = String(near).split(",").map(Number);
+
     if (Number.isFinite(lng) && Number.isFinite(lat)) {
-      filter.geo = {
-        $near: {
-          $geometry: { type: 'Point', coordinates: [lng, lat] },
-        },
-           $maxDistance: (radiusKm || 100) * 1000
-      }
-    };
-  }
+        filter.geo = {
+            $near: {
+                $geometry: {
+                    type: "Point",
+                    coordinates: [lng, lat]
+                },
+                $maxDistance: (Number(radiusKm) || 100) * 1000
+            }
+        };
+    }
+}
 
 const pageNumber = Math.max(Number(page) || 1, 1);
 const pageSize = Math.max(Number(limit) || 10, 1);
@@ -202,11 +206,6 @@ const startDate = new Date(payload.startDate);
 startDate.setHours(0, 0, 0, 0);
 
 if (startDate < today) {
-    throw ApiError.badRequest(
-        "Trip cannot start in the past."
-    );
-}
-{
     throw ApiError.badRequest(
         "Trip cannot start in the past."
     );
