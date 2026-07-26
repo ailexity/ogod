@@ -63,6 +63,16 @@ leadSchema.index
     status: 1,
     createdAt: -1
 });
+
+leadSchema.index(
+    {
+        tripId: 1,
+        travelerMobile: 1
+    },
+    {
+        unique: true
+    }
+);
 leadSchema.methods.toJSON = function () 
 {
     const obj = this.toObject();
