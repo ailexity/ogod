@@ -84,7 +84,7 @@ for (const file of files)
     files.map((f) => s3.uploadImage(f.buffer, f.originalname, 'gallery'))
   );
   return ok(res,{
-  asset: result,
+  assets,
   uploadedAt: new Date(),
 });
 });
