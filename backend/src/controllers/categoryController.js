@@ -13,6 +13,24 @@ const listCategories = asyncHandler(async (req, res) => {
   return ok(res, { categories });
 });
 
+const getCategory = asyncHandler(async (req, res) => {
+    const filter = {
+        slug: req.params.slug.toLowerCase()
+    };
+
+    if (req.user?.role !== "admin") {
+        filter.active = true;
+    }
+
+    const category = await Category.findOne(filter);
+
+    if (!category) {
+        throw ApiError.notFound("Category not found");
+    }
+
+    return ok(res, { category });
+});
+
 /** POST /api/categories  (admin) */
 const createCategory = asyncHandler(async (req, res) => {
   const { slug, label } = req.body;
@@ -35,12 +53,26 @@ const createCategory = asyncHandler(async (req, res) => {
 
 /** PATCH /api/categories/:slug  (admin) */
 const updateCategory = asyncHandler(async (req, res) => {
-  if (req.body.slug) {
+  if (req.body.slug)
+  {
     req.body.slug = req.body.slug.toLowerCase().trim();
   }
+  if (req.body.slug) 
+  {
+    const existing = await Category.findOne({
+        slug: req.body.slug,
+        _id: { $ne: category?._id }
+    });
+
+    if (existing) {
+        throw ApiError.conflict("Category slug already exists.");
+    }
+}
 
   const category = await Category.findOneAndUpdate(
-    { slug: req.params.slug.toLowerCase() },
+    { 
+      slug: req.params.slug.toLowerCase() 
+    },
     req.body,
     { new: true, runValidators: true }
   );
@@ -55,7 +87,9 @@ const updateCategory = asyncHandler(async (req, res) => {
 const deleteCategory = asyncHandler(async (req, res) => {
 
   const category = await Category.findOneAndUpdate(
-      { slug: req.params.slug },
+  {
+    slug: req.params.slug.toLowerCase()
+  },
       { active: false },
       { new: true }
   );
@@ -67,4 +101,4 @@ const deleteCategory = asyncHandler(async (req, res) => {
 
 });
 
-module.exports = { listCategories, createCategory, updateCategory, deleteCategory };
+module.exports = { listCategories,getCategory, createCategory, updateCategory, deleteCategory };
