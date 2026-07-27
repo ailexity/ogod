@@ -12,24 +12,54 @@ const { notFound, errorHandler } = require('./middleware/error');
 
 const app = express();
 app.disable('etag');
+app.disable("x-powered-by");
 
 function isAllowedOrigin(origin) {
- if (Array.isArray(env.corsOrigins) && env.corsOrigins.includes(origin)) {
-    return true;
-}
 
-  if (!env.isProd) {
-    try {
-      const url = new URL(origin);
-      const isLocalHost = ['localhost', '127.0.0.1'].includes(url.hostname);
-      const isVitePort = Number(url.port) >= 5173 && Number(url.port) <= 5199;
-      return url.protocol === 'http:' && isLocalHost && isVitePort;
-    } catch {
-      return false;
+    if (!origin) {
+        return true;
     }
-  }
 
-  return false;
+    const allowedOrigins = env.corsOrigins || [];
+
+    if (
+        Array.isArray(allowedOrigins) &&
+        allowedOrigins.includes(origin)
+    ) {
+        return true;
+    }
+
+    if (!env.isProd) {
+
+        try {
+
+            const url = new URL(origin);
+
+            const isLocalhost =
+                url.hostname === "localhost" ||
+                url.hostname === "127.0.0.1";
+
+            const port = Number(url.port);
+
+            const isVite =
+                port >= 5173 &&
+                port <= 5199;
+
+            return (
+                url.protocol === "http:" &&
+                isLocalhost &&
+                isVite
+            );
+
+        } catch {
+
+            return false;
+
+        }
+
+    }
+
+    return false;
 }
 
 // Behind Railway/Render/CloudFront we sit behind a proxy — trust it so rate
@@ -51,7 +81,6 @@ app.use(
 
 app.use(express.json({ limit: '5mb' }));
 app.use(express.urlencoded({ extended: true }));
-app.disable("x-powered-by");
 app.use(morgan(env.isProd ? 'combined' : 'dev'));
 
 // Global, generous rate limit as a backstop (auth has its own tighter limit).
@@ -72,7 +101,6 @@ app.use((req, res, next) => {
     next();
 });
 
-app.use(express.json({ limit: "5mb" }));
 app.use('/api', apiRoutes);
 
 app.use(notFound);
