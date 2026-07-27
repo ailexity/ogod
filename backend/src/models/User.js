@@ -18,7 +18,6 @@ mobile: {
   unique: true,
   index: true,
   trim: true,
-  lowercase: true,
   match: /^[0-9]{10,15}$/,
 },
     organizationName: { type: String, trim: true, maxlength: 160 },
@@ -49,17 +48,17 @@ lastLogin:
 );
 
 userSchema.methods.toJSON = function () {
-    const obj = this.toObject();
+    const obj = this.toObject({
+        virtuals: true,
+    });
 
     delete obj.__v;
     delete obj.refreshToken;
 
     return obj;
 };
-};
 
 userSchema.statics.ROLES = ROLES;
-userSchema.index({ mobile: 1 });
 userSchema.index({ role: 1 });
 
 module.exports = mongoose.model('User', userSchema);
