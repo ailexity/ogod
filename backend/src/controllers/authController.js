@@ -47,41 +47,28 @@ const result = await otpService.requestOtp(mobile);
     });
 });
 
-    return ok(res, {
-        mobile: result.mobile,
-        expiresInSeconds: result.expiresInSeconds,
-        devCode: result.devCode,
-        message: "OTP resent successfully."
-    });
-});
-
 /**
  * POST /api/auth/verify-otp
  * Body: { mobile, code, name?, organizationName? }
  * Verifies the OTP, creates the poster on first login, returns a JWT.
  */
 const verifyOtp = asyncHandler(async (req, res) => {
-const
-{
+const {
+  mobile,
   code,
   name,
-  organizationName,
-  role = "poster"
+  organizationName
 } = req.body;
   
-  if (!req.body.mobile || !code)
+  if (!mobile || !code)
   {
     throw ApiError.badRequest("Mobile and OTP are required");
  }
-  const { mobile } = await otpService.verifyOtp(req.body.mobile, code);
+  const verified = await otpService.verifyOtp(mobile, code);
+  const verifiedMobile = verified.mobile;
 
-  let user = await User.findOne({ mobile });
+  let user = await User.findOne({ mobile: verifiedMobile });
   const isNewUser = !user;
-  if (user)
-  {
-    user.lastLogin = new Date();
-    await user.save();
-  }
 
   if (!user) {
     // First-time sign-up requires a name to complete the basic profile.
