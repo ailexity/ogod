@@ -12,7 +12,11 @@ const {
 
 const router = express.Router();
 
-router.get('/', controller.listCategories);
+router.get(
+    '/',
+    optionalAuth,
+    controller.listCategories
+);
 router.get
 (
     '/:slug',
