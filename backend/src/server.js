@@ -21,22 +21,39 @@ async function start() {
 
 async function shutdown(signal) {
   logger.info(`${signal} received — shutting down gracefully`);
-  if (server) {
-    await new Promise((resolve) => server.close(resolve));
+
+  try {
+    if (server) {
+      await new Promise((resolve) => server.close(resolve));
+    }
+
+    await disconnectDB();
+
+    process.exit(0);
+
+  } catch (err) {
+    logger.error("Shutdown failed:", err);
+
+    process.exit(1);
   }
-  await disconnectDB();
-  process.exit(0);
 }
 
 ['SIGINT', 'SIGTERM'].forEach((sig) => process.on(sig, () => shutdown(sig)));
 
-process.on('unhandledRejection', (reason) => {
-  logger.error('Unhandled rejection:', reason);
+process.on("unhandledRejection", async (reason) => {
+
+    logger.error("Unhandled Rejection:", reason);
+
+    await shutdown("UNHANDLED_REJECTION");
+
 });
 
-process.on('uncaughtException', (error) => {
-  logger.error('Uncaught Exception:', error);
-  process.exit(1);
+process.on("uncaughtException", async (error) => {
+
+    logger.error("Uncaught Exception:", error);
+
+    await shutdown("UNCAUGHT_EXCEPTION");
+
 });
 
 process.on('warning', (warning) => {
