@@ -14,7 +14,12 @@ const {
 const router = express.Router();
 
 // ---- Public browse/search ----
-router.get('/', validate(listTripsQuerySchema, 'query'), controller.listTrips);
+router.get(
+    '/',
+    optionalAuth,
+    validate(listTripsQuerySchema, "query"),
+    controller.listTrips
+);
 router.get('/shelves', controller.homeShelves);
 
 // ---- Poster-owned (must come before "/:id" to avoid capture) ----
@@ -30,12 +35,14 @@ router.post(
 
 router.get(
     '/search',
-    validate(listTripsQuerySchema, 'query'),
+    optionalAuth,
+    validate(listTripsQuerySchema, "query"),
     controller.listTrips
 );
 
 router.get(
-    '/active',
+    "/active",
+    optionalAuth,
     controller.listTrips
 );
 
