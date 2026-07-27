@@ -14,7 +14,9 @@ const app = express();
 app.disable('etag');
 
 function isAllowedOrigin(origin) {
-  if (env.corsOrigins.includes(origin)) return true;
+ if (Array.isArray(env.corsOrigins) && env.corsOrigins.includes(origin)) {
+    return true;
+}
 
   if (!env.isProd) {
     try {
@@ -65,11 +67,12 @@ app.use(
 app.get('/api/health', (_req, res) =>
   res.json({ success: true, data: { status: 'ok', uptime: process.uptime(), env: env.nodeEnv } })
 );
-app.use((req, res, next) => 
-{
+app.use((req, res, next) => {
     res.setTimeout(30000);
     next();
 });
+
+app.use(express.json({ limit: "5mb" }));
 app.use('/api', apiRoutes);
 
 app.use(notFound);
