@@ -47,7 +47,7 @@ function publicUrl(key) {
  */
 async function uploadImage(buffer, originalName, kind = 'gallery') 
 {
-  const extension = path.extname(originalName).toLowerCase();
+  const extension = path.extname(originalName || "").toLowerCase();
   const allowedExtensions = 
 [
     ".jpg",
@@ -71,20 +71,19 @@ if (!allowedExtensions.includes(extension))
     err.statusCode = 503;
     throw err;
   }
-  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+if (!buffer || buffer.length === 0) {
+    const err = new Error("Empty image received.");
+    err.statusCode = 400;
+    throw err;
+}
 
-if (buffer.length > MAX_FILE_SIZE)
-{
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
+
+if (buffer.length > MAX_FILE_SIZE) {
     const err = new Error("Image size cannot exceed 5 MB");
     err.statusCode = 400;
     throw err;
 }
-  if (!buffer || buffer.length === 0) 
-  {
-    const err = new Error("Empty image received.");
-    err.statusCode = 400;
-    throw err;
-   }
 
   const maxWidth = kind === 'cover' ? 1600 : 1200;
   const metadata = await sharp(buffer).metadata();
