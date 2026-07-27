@@ -36,10 +36,10 @@ const createTripSchema = z
     pricePerPerson: z.number().nonnegative(),
     totalSeats: z.number().int().positive(),
     seatsRemaining: z.number().int().nonnegative().optional(),
-    description: z.string().trim().max(5000).optional(),
+    description: z.string().trim().min(20).max(5000).optional(),
     itinerary: z.array(itineraryDay).default([]),
     coverPhotoUrl: z.string().url(),
-    galleryUrls: z.array(z.string().url()).default([]),
+    galleryUrls:z.array(z.string().url()).max(10).default([]),
   })
   .refine((v) => v.endDate >= v.startDate, {
     message: 'endDate must be on or after startDate',
