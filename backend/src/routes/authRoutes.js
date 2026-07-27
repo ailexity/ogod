@@ -23,7 +23,11 @@ router.post('/resend-otp', otpLimiter, validate(requestOtpSchema), controller.re
 router.post('/verify-otp', otpLimiter, validate(verifyOtpSchema), controller.verifyOtp);
 router.get("/admin/profile", requireAuth, authorize("admin"), controller.me);
 router.patch('/me', requireAuth, validate(updateProfileSchema), controller.updateMe);
-router.post("/refresh-token", controller.refreshToken);
+router.get(
+    "/me",
+    requireAuth,
+    controller.me
+);
 router.post('/logout', requireAuth, controller.logout);
 
 module.exports = router;
