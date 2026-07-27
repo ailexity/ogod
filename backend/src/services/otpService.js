@@ -112,14 +112,16 @@ async function verifyOtp(rawMobile, submittedCode) {
   if (!submittedCode) throw ApiError.badRequest('OTP code is required');
   const otpRegex = new RegExp(`^[0-9]{${env.otp.length}}$`);
 
-if (!otpRegex.test(String(submittedCode)))
-{
+if (!otpRegex.test(String(submittedCode))) {
     throw ApiError.badRequest(
         `OTP must be exactly ${env.otp.length} digits.`
     );
 }
-  }
-  const record = await Otp.findOne({ mobile, purpose: 'login' });
+
+const record = await Otp.findOne({
+    mobile,
+    purpose: "login"
+});
   if (!record) throw ApiError.badRequest('No OTP requested for this number, or it expired');
 
   if (record.expiresAt.getTime() < Date.now()) {
@@ -132,11 +134,7 @@ if (!otpRegex.test(String(submittedCode)))
     throw ApiError.tooMany('Too many incorrect attempts, please request a new OTP');
   }
   const otp = String(submittedCode).trim();
-  const matches = await bcrypt.compare
-(
-    otp,
-    record.codeHash
-);
+
   const matches = await bcrypt.compare(String(submittedCode), record.codeHash);
   if (!matches) {
     record.attempts += 1;
