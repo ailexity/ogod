@@ -8,7 +8,14 @@ const ApiError = require('../utils/ApiError');
  * Files are small (trip photos) and processed immediately, so memoryStorage is
  * appropriate. Limits guard against oversized uploads.
  */
-const ALLOWED = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif','image/gif'];
+const ALLOWED = [
+    "image/jpeg",
+    "image/png",
+    "image/webp",
+    "image/heic",
+    "image/heif",
+    "image/gif",
+];
 
 const upload = multer({
   storage: multer.memoryStorage(),
