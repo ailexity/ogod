@@ -224,7 +224,7 @@ if (payload.totalSeats < 1) {
 payload.seatsRemaining = payload.totalSeats;
 let geo = payload.geo;
 
-if (!geo && payload.destinationName) {
+if (!geo && payload.destination.name) {
     try {
         const location = await geocodeLocation(
             payload.destination.name
@@ -311,7 +311,7 @@ if (updates.totalSeats !== undefined) {
         "Trip cannot be edited after it has started."
     );
   }
-if (updates.destinationName) 
+if (updates.destination.name) 
 {
     try {
         const location = await geocodeLocation(
