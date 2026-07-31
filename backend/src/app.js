@@ -73,14 +73,19 @@ app.use(
       // Allow non-browser clients (mobile app, curl) which send no origin.
       if (!origin) return cb(null, true);
       if (isAllowedOrigin(origin)) return cb(null, true);
-      return cb(new Error(`Origin ${origin} not allowed by CORS`));
+      return cb(
+    new Error("CORS policy does not allow this origin")
+    );
     },
     credentials: true,
   })
 );
 
 app.use(express.json({ limit: '5mb' }));
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({
+    extended: true,
+    limit: "5mb",
+}));
 app.use(morgan(env.isProd ? 'combined' : 'dev'));
 
 // Global, generous rate limit as a backstop (auth has its own tighter limit).
@@ -97,7 +102,14 @@ app.get('/api/health', (_req, res) =>
   res.json({ success: true, data: { status: 'ok', uptime: process.uptime(), env: env.nodeEnv } })
 );
 app.use((req, res, next) => {
-    res.setTimeout(30000);
+    res.setTimeout(30000, () => {
+        if (!res.headersSent) {
+            return res.status(408).json({
+                success: false,
+                message: "Request Timeout"
+            });
+        }
+    });
     next();
 });
 
