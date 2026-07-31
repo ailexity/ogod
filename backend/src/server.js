@@ -42,17 +42,20 @@ async function shutdown(signal) {
 
 process.on("unhandledRejection", async (reason) => {
 
-    logger.error("Unhandled Rejection:", reason);
+    logger.error(
+        "Unhandled Rejection:",
+        reason instanceof Error ? reason.stack : reason
+    );
 
     await shutdown("UNHANDLED_REJECTION");
 
 });
 
-process.on("uncaughtException", async (error) => {
+process.on("uncaughtException", (error) => {
 
     logger.error("Uncaught Exception:", error);
 
-    await shutdown("UNCAUGHT_EXCEPTION");
+    process.exit(1);
 
 });
 
