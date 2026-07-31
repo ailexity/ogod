@@ -16,11 +16,12 @@ router.get('/', (_req, res) => {
         success: true,
         message: "Ogod Backend API Running",
         data: {
-            name: "Ogod API",
-            version: "1.0.0",
-            phase: "Phase 1 (MVP)",
-            docs: "/api/health"
-        }
+               name: "Ogod API",
+               version: "1.0.0",
+               phase: "Phase 1 (MVP)",
+               docs: "/api/health",
+               timestamp: new Date().toISOString()
+             }
     });
 });
 
