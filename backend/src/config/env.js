@@ -37,10 +37,11 @@ const env = {
 
   mongoUri: required('MONGODB_URI'),
 
-  jwt: {
+jwt: {
     secret: process.env.JWT_SECRET || 'dev-insecure-secret',
     expiresIn: process.env.JWT_EXPIRES_IN || '30d',
-  },
+    refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '30d',
+},
 
   otp: {
     ttlSeconds: int('OTP_TTL_SECONDS', 300),
@@ -72,7 +73,8 @@ aws:
     cdnBaseUrl: process.env.CDN_BASE_URL,
 },
 
-googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY,
+googleMapsApiKey:
+    required("GOOGLE_MAPS_API_KEY"),
 
 adminMobile: process.env.ADMIN_MOBILE,
 };
