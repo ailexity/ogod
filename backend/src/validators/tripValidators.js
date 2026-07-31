@@ -17,10 +17,13 @@ const destination = z.object({
     .object({
       type: z.literal('Point').default('Point'),
       // [longitude, latitude]
-      coordinates: z.tuple([z.number(), z.number()]),
+      coordinates: z.tuple([
+    z.number().min(-180).max(180),
+    z.number().min(-90).max(90),
+    ]),
     })
     .optional(),
-});
+}).strict();
 
 // Dates arrive as ISO strings from the clients; coerce to Date.
 const isoDate = z.coerce.date();
@@ -38,9 +41,13 @@ const createTripSchema = z
     seatsRemaining: z.number().int().nonnegative().optional(),
     description: z.string().trim().min(20).max(5000).optional(),
     itinerary: z.array(itineraryDay).default([]),
+    meetingPoint: z.string().trim().max(200).optional(),
+    meetingTime: z.string().trim().max(100).optional(),
+    thumbnailUrl: z.string().url().optional(),
     coverPhotoUrl: z.string().url(),
     galleryUrls:z.array(z.string().url()).max(10).default([]),
   })
+  .strict()
   .refine((v) => v.endDate >= v.startDate, {
     message: 'endDate must be on or after startDate',
     path: ['endDate'],
@@ -59,10 +66,13 @@ const updateTripSchema = z.object({
   seatsRemaining: z.number().int().nonnegative().optional(),
   description: z.string().trim().max(5000).optional(),
   itinerary: z.array(itineraryDay).optional(),
+  meetingPoint: z.string().trim().max(200).optional(),
+  meetingTime: z.string().trim().max(100).optional(),
+  thumbnailUrl: z.string().url().optional(),
   coverPhotoUrl: z.string().url().optional(),
-  galleryUrls: z.array(z.string().url()).optional(),
+  galleryUrls: z.array(z.string().url()).max(10).optional(),
   status: z.enum(['live', 'paused', 'deleted', 'past']).optional(),
-});
+}).strict();
 
 const listTripsQuerySchema = z.object({
   q: z.string().trim().optional(),
@@ -75,7 +85,7 @@ const listTripsQuerySchema = z.object({
   page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().positive().max(50).default(20),
   sort: z.enum(['recent', 'departing', 'priceAsc', 'priceDesc']).default('recent'),
-});
+}).strict();
 
 module.exports = {
   createTripSchema,
