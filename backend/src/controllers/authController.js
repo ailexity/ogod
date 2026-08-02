@@ -15,11 +15,12 @@ const { signToken } = require('../services/tokenService');
 const requestOtp = asyncHandler(async (req, res) => {
   const { mobile } = req.body;
 
-if (!mobile) {
-    throw ApiError.badRequest("Mobile number is required");
-}
+  if (!mobile) {
+    throw ApiError.badRequest('Mobile number is required');
+  }
 
-const result = await otpService.requestOtp(mobile);
+  const result = await otpService.requestOtp(mobile);
+
   return ok(res, {
     mobile: result.mobile,
     expiresInSeconds: result.expiresInSeconds,
@@ -30,21 +31,27 @@ const result = await otpService.requestOtp(mobile);
       : 'OTP sent to your mobile number.',
   });
 });
-    const resendOtp = asyncHandler(async (req, res) => {
-    const { mobile } = req.body;
 
-    if (!mobile) {
-        throw ApiError.badRequest("Mobile number is required");
-    }
+/**
+ * POST /api/auth/resend-otp
+ * Body: { mobile }
+ * Resends an OTP to the given mobile.
+ */
+const resendOtp = asyncHandler(async (req, res) => {
+  const { mobile } = req.body;
 
-    const result = await otpService.requestOtp(mobile);
+  if (!mobile) {
+    throw ApiError.badRequest('Mobile number is required');
+  }
 
-    return ok(res, {
-        mobile: result.mobile,
-        expiresInSeconds: result.expiresInSeconds,
-        devCode: result.devCode,
-        message: "OTP resent successfully."
-    });
+  const result = await otpService.requestOtp(mobile);
+
+  return ok(res, {
+    mobile: result.mobile,
+    expiresInSeconds: result.expiresInSeconds,
+    devCode: result.devCode,
+    message: 'OTP resent successfully.',
+  });
 });
 
 /**
@@ -53,17 +60,17 @@ const result = await otpService.requestOtp(mobile);
  * Verifies the OTP, creates the poster on first login, returns a JWT.
  */
 const verifyOtp = asyncHandler(async (req, res) => {
-const {
-  mobile,
-  code,
-  name,
-  organizationName
-} = req.body;
-  
-  if (!mobile || !code)
-  {
-    throw ApiError.badRequest("Mobile and OTP are required");
- }
+  const {
+    mobile,
+    code,
+    name,
+    organizationName,
+  } = req.body;
+
+  if (!mobile || !code) {
+    throw ApiError.badRequest('Mobile and OTP are required');
+  }
+
   const verified = await otpService.verifyOtp(mobile, code);
   const verifiedMobile = verified.mobile;
 
@@ -72,26 +79,47 @@ const {
 
   if (!user) {
     // First-time sign-up requires a name to complete the basic profile.
-    if (!name) {
+    if (!name || !name.trim()) {
       throw ApiError.badRequest('Name is required to complete sign-up', [
         { path: 'name', message: 'Required for new accounts' },
       ]);
     }
-    user = await User.create({mobile,
-      name,
-      organizationName,
-      role,
+
+    user = await User.create({
+      mobile: verifiedMobile,
+      name: name.trim(),
+      organizationName: organizationName?.trim() || undefined,
+      role: 'poster',
       isVerified: true,
     });
   } else if (!user.isVerified) {
     user.isVerified = true;
-    if (name) user.name = name;
-    if (organizationName !== undefined) user.organizationName = organizationName;
+
+    if (name !== undefined) {
+      const trimmedName = name.trim();
+
+      if (trimmedName.length < 3) {
+        throw ApiError.badRequest(
+          'Name should contain at least 3 characters'
+        );
+      }
+
+      user.name = trimmedName;
+    }
+
+    if (organizationName !== undefined) {
+      user.organizationName =
+        organizationName.trim() || undefined;
+    }
+
     await user.save();
   }
+
   user.lastLogin = new Date();
   await user.save();
+
   const token = signToken(user);
+
   return ok(res, {
     token,
     isNewUser,
@@ -105,34 +133,56 @@ const {
   });
 });
 
+/**
+ * GET /api/auth/me
+ * Returns the current authenticated user.
+ */
+const me = asyncHandler(async (req, res) =>
+  ok(res, { user: req.user })
+);
 
-/** GET /api/auth/me — current authenticated user. */
-const me = asyncHandler(async (req, res) => ok(res, { user: req.user }));
-
-/** PATCH /api/auth/me — update basic profile fields. */
+/**
+ * PATCH /api/auth/me
+ * Updates basic profile fields.
+ */
 const updateMe = asyncHandler(async (req, res) => {
   const { name, organizationName } = req.body;
-  if (name && name.trim().length < 3) 
-  {
-    throw ApiError.badRequest("Name should contain at least 3 characters");
+
+  if (name !== undefined) {
+    const trimmedName = name.trim();
+
+    if (trimmedName.length < 3) {
+      throw ApiError.badRequest(
+        'Name should contain at least 3 characters'
+      );
+    }
+
+    req.user.name = trimmedName;
   }
-  if (name !== undefined) req.user.name = name;
-  if (organizationName !== undefined) req.user.organizationName = organizationName;
+
+  if (organizationName !== undefined) {
+    req.user.organizationName =
+      organizationName.trim() || undefined;
+  }
+
   await req.user.save();
+
   return ok(res, { user: req.user });
 });
-  
-  const logout = asyncHandler(async (req, res) => 
-{
-    return ok(res,
-   {
-        message: "Logged out successfully."
-    });
 
+/**
+ * POST /api/auth/logout
+ *
+ * Full refresh-token invalidation will be implemented after
+ * tokenService/User authentication flow is verified.
+ */
+const logout = asyncHandler(async (req, res) => {
+  return ok(res, {
+    message: 'Logged out successfully.',
+  });
 });
 
-module.exports =
-{
+module.exports = {
   requestOtp,
   resendOtp,
   verifyOtp,
