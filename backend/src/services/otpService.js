@@ -133,9 +133,12 @@ const record = await Otp.findOne({
     await record.deleteOne();
     throw ApiError.tooMany('Too many incorrect attempts, please request a new OTP');
   }
-  const otp = String(submittedCode).trim();
+const otp = String(submittedCode).trim();
 
-  const matches = await bcrypt.compare(String(submittedCode), record.codeHash);
+const matches = await bcrypt.compare(
+  otp,
+  record.codeHash
+);
   if (!matches) {
     record.attempts += 1;
     await record.save();
