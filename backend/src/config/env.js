@@ -38,9 +38,12 @@ const env = {
   mongoUri: required('MONGODB_URI'),
 
 jwt: {
-    secret: process.env.JWT_SECRET || 'dev-insecure-secret',
-    expiresIn: process.env.JWT_EXPIRES_IN || '30d',
-    refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '30d',
+  secret: process.env.JWT_SECRET || 'dev-insecure-secret',
+  refreshSecret:
+    process.env.JWT_REFRESH_SECRET || 'dev-refresh-insecure-secret',
+  expiresIn: process.env.JWT_EXPIRES_IN || '30d',
+  refreshExpiresIn:
+    process.env.JWT_REFRESH_EXPIRES_IN || '30d',
 },
 
   otp: {
