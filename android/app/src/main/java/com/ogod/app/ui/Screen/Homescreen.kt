@@ -1,7 +1,15 @@
+```kotlin
 package com.ogod.app.ui.screens
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Card
@@ -13,9 +21,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ogod.app.data.model.Trip
 import com.ogod.app.viewmodel.TripViewModel
 
@@ -23,7 +31,8 @@ import com.ogod.app.viewmodel.TripViewModel
 fun HomeScreen(
     tripViewModel: TripViewModel,
     onTripClick: (String) -> Unit
-)
+) {
+
     val trips by tripViewModel.trips.collectAsState()
     val loading by tripViewModel.loading.collectAsState()
     val error by tripViewModel.error.collectAsState()
@@ -35,20 +44,24 @@ fun HomeScreen(
     when {
 
         loading -> {
+
             Box(
                 modifier = Modifier.fillMaxSize(),
-                contentAlignment = androidx.compose.ui.Alignment.Center
+                contentAlignment = Alignment.Center
             ) {
                 CircularProgressIndicator()
             }
         }
 
         error != null -> {
+
             Box(
                 modifier = Modifier.fillMaxSize(),
-                contentAlignment = androidx.compose.ui.Alignment.Center
+                contentAlignment = Alignment.Center
             ) {
-                Text(error!!)
+                Text(
+                    text = error ?: "Unable to load trips"
+                )
             }
         }
 
@@ -60,21 +73,20 @@ fun HomeScreen(
             ) {
 
                 items(trips) { trip ->
-    TripCard(
-        trip = trip,
-        onClick = {
-            onTripClick(trip._id)
-        }
-    )
-}
 
+                    TripCard(
+                        trip = trip,
+                        onClick = {
+                            onTripClick(trip._id)
+                        }
+                    )
+                }
             }
         }
     }
-
 }
 
-@Composable
+
 @Composable
 fun TripCard(
     trip: Trip,
@@ -84,7 +96,10 @@ fun TripCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(bottom = 12.dp),
+            .padding(bottom = 12.dp)
+            .clickable {
+                onClick()
+            },
         elevation = CardDefaults.cardElevation(5.dp)
     ) {
 
@@ -97,32 +112,38 @@ fun TripCard(
                 style = MaterialTheme.typography.titleMedium
             )
 
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(
+                modifier = Modifier.height(6.dp)
+            )
 
             Text(
                 text = trip.destination.name
             )
 
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(
+                modifier = Modifier.height(6.dp)
+            )
 
             Text(
                 text = "₹${trip.pricePerPerson}"
             )
 
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(
+                modifier = Modifier.height(6.dp)
+            )
 
             Text(
                 text = "${trip.totalSeats} Seats"
             )
 
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(
+                modifier = Modifier.height(6.dp)
+            )
 
             Text(
                 text = trip.startDate
             )
-
         }
-
     }
-
 }
+```
