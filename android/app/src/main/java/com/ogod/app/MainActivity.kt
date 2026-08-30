@@ -87,9 +87,12 @@ private fun OgodApp() {
     val context = LocalContext.current
 
     val tripViewModel: TripViewModel = viewModel(
-        factory = ViewModelFactory(context)
-    )
+    factory = ViewModelFactory(context)
+)
 
+val searchViewModel: SearchViewModel = viewModel(
+    factory = ViewModelFactory(context)
+)
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = OgodColors.Background,
