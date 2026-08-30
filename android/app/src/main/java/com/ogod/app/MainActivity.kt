@@ -32,12 +32,15 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.ogod.app.ui.screens.HomeScreen
+import com.ogod.app.ui.screens.LoginScreen
+import com.ogod.app.ui.screens.OtpScreen
 import com.ogod.app.ui.screens.PostTripScreen
 import com.ogod.app.ui.screens.ProfileScreen
 import com.ogod.app.ui.screens.SearchScreen
 import com.ogod.app.ui.screens.TripDetailScreen
 import com.ogod.app.ui.theme.OgodColors
 import com.ogod.app.ui.theme.OgodTheme
+import com.ogod.app.viewmodel.AuthViewModel
 import com.ogod.app.viewmodel.SearchViewModel
 import com.ogod.app.viewmodel.TripViewModel
 import com.ogod.app.viewmodel.factory.ViewModelFactory
@@ -91,12 +94,18 @@ private fun OgodApp() {
 
     val context = LocalContext.current
 
+    val viewModelFactory = ViewModelFactory(context)
+
     val tripViewModel: TripViewModel = viewModel(
-        factory = ViewModelFactory(context)
+        factory = viewModelFactory
     )
 
     val searchViewModel: SearchViewModel = viewModel(
-        factory = ViewModelFactory(context)
+        factory = viewModelFactory
+    )
+
+    val authViewModel: AuthViewModel = viewModel(
+        factory = viewModelFactory
     )
 
     var selectedIndex by rememberSaveable {
@@ -158,15 +167,25 @@ private fun OgodApp() {
             startDestination = "home"
         ) {
 
+            // -------------------------
+            // HOME
+            // -------------------------
+
             composable("home") {
 
                 HomeScreen(
                     tripViewModel = tripViewModel,
                     onTripClick = { tripId ->
-                        navController.navigate("trip_detail/$tripId")
+                        navController.navigate(
+                            "trip_detail/$tripId"
+                        )
                     }
                 )
             }
+
+            // -------------------------
+            // SEARCH
+            // -------------------------
 
             composable("search") {
 
@@ -175,6 +194,10 @@ private fun OgodApp() {
                 )
             }
 
+            // -------------------------
+            // POST TRIP
+            // -------------------------
+
             composable("post_trip") {
 
                 PostTripScreen(
@@ -182,12 +205,30 @@ private fun OgodApp() {
                 )
             }
 
+            // -------------------------
+            // PROFILE
+            // -------------------------
+
             composable("profile") {
 
                 ProfileScreen(
-                    paddingValues = innerPadding
+                    viewModel = authViewModel,
+                    onLogout = {
+
+                        authViewModel.logout()
+
+                        navController.navigate("login") {
+                            popUpTo("home") {
+                                inclusive = false
+                            }
+                        }
+                    }
                 )
             }
+
+            // -------------------------
+            // TRIP DETAILS
+            // -------------------------
 
             composable(
                 route = "trip_detail/{tripId}",
@@ -209,7 +250,61 @@ private fun OgodApp() {
                     )
                 }
             }
+
+            // -------------------------
+            // LOGIN
+            // -------------------------
+
+            composable("login") {
+
+                LoginScreen(
+                    viewModel = authViewModel,
+                    onOtpSent = { mobile ->
+
+                        navController.navigate(
+                            "otp/$mobile"
+                        )
+                    }
+                )
+            }
+
+            // -------------------------
+            // OTP
+            // -------------------------
+
+            composable(
+                route = "otp/{mobile}",
+                arguments = listOf(
+                    navArgument("mobile") {
+                        type = NavType.StringType
+                    }
+                )
+            ) { backStackEntry ->
+
+                val mobile =
+                    backStackEntry.arguments?.getString("mobile")
+
+                if (mobile != null) {
+
+                    OtpScreen(
+                        mobile = mobile,
+                        viewModel = authViewModel,
+                        onVerified = {
+
+                            selectedIndex = 0
+
+                            navController.navigate("home") {
+
+                                popUpTo("login") {
+                                    inclusive = true
+                                }
+                            }
+                        }
+                    )
+                }
+            }
         }
     }
 }
 ```
+
