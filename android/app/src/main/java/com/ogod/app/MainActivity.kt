@@ -29,9 +29,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ogod.app.ui.screens.HomeScreen
+import com.ogod.app.ui.screens.SearchScreen
 import com.ogod.app.ui.theme.OgodColors
 import com.ogod.app.ui.theme.OgodTheme
 import com.ogod.app.viewmodel.TripViewModel
+import com.ogod.app.viewmodel.SearchViewModel
 import com.ogod.app.viewmodel.factory.ViewModelFactory
 
 
@@ -140,10 +142,11 @@ private fun OgodApp() {
             }
 
             1 -> {
-                PlaceholderScreen(
-                    title = "Search"
-                )
-            }
+        SearchScreen(
+            viewModel = searchViewModel
+        )
+    }
+
 
             2 -> {
                 PlaceholderScreen(
