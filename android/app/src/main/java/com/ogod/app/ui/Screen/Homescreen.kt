@@ -1,5 +1,6 @@
 package com.ogod.app.ui.screens
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -20,9 +21,9 @@ import com.ogod.app.viewmodel.TripViewModel
 
 @Composable
 fun HomeScreen(
-    tripViewModel: TripViewModel
-) {
-
+    tripViewModel: TripViewModel,
+    onTripClick: (String) -> Unit
+)
     val trips by tripViewModel.trips.collectAsState()
     val loading by tripViewModel.loading.collectAsState()
     val error by tripViewModel.error.collectAsState()
@@ -59,8 +60,13 @@ fun HomeScreen(
             ) {
 
                 items(trips) { trip ->
-                    TripCard(trip)
-                }
+    TripCard(
+        trip = trip,
+        onClick = {
+            onTripClick(trip._id)
+        }
+    )
+}
 
             }
         }
@@ -69,8 +75,10 @@ fun HomeScreen(
 }
 
 @Composable
+@Composable
 fun TripCard(
-    trip: Trip
+    trip: Trip,
+    onClick: () -> Unit
 ) {
 
     Card(
