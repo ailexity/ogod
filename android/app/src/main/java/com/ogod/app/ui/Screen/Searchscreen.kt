@@ -33,6 +33,7 @@ import com.ogod.app.viewmodel.SearchViewModel
 fun SearchScreen(
     viewModel: SearchViewModel
 ) {
+
     var query by remember {
         mutableStateOf("")
     }
@@ -55,6 +56,7 @@ fun SearchScreen(
                 bottom = 16.dp
             )
     ) {
+
         Text(
             text = "Search Trips",
             color = OgodColors.TextPrimary,
@@ -85,6 +87,7 @@ fun SearchScreen(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
+
             CategoryButton(
                 text = "All",
                 selected = selectedCategory == null,
@@ -116,8 +119,11 @@ fun SearchScreen(
 
         Button(
             onClick = {
+
                 viewModel.searchTrips(
-                    query = query,
+                    query = query.ifBlank {
+                        ""
+                    },
                     category = selectedCategory
                 )
             },
@@ -135,11 +141,14 @@ fun SearchScreen(
         )
 
         when {
+
             loading -> {
+
                 CircularProgressIndicator()
             }
 
             error != null -> {
+
                 Text(
                     text = error ?: "Something went wrong",
                     color = OgodColors.TextPrimary
@@ -147,6 +156,7 @@ fun SearchScreen(
             }
 
             searchResults.isEmpty() -> {
+
                 Text(
                     text = "No trips found.",
                     color = OgodColors.TextSecondary
@@ -154,11 +164,17 @@ fun SearchScreen(
             }
 
             else -> {
+
                 LazyColumn(
                     modifier = Modifier.fillMaxSize()
                 ) {
+
                     items(searchResults) { trip ->
-                        TripSearchCard(trip)
+
+                        TripSearchCard(
+                            trip = trip
+                        )
+
                         Spacer(
                             modifier = Modifier.height(12.dp)
                         )
@@ -169,12 +185,14 @@ fun SearchScreen(
     }
 }
 
+
 @Composable
 private fun CategoryButton(
     text: String,
     selected: Boolean,
     onClick: () -> Unit
 ) {
+
     Button(
         onClick = onClick,
         colors = ButtonDefaults.buttonColors(
@@ -190,21 +208,27 @@ private fun CategoryButton(
             }
         )
     ) {
-        Text(text)
+
+        Text(
+            text = text
+        )
     }
 }
+
 
 @Composable
 private fun TripSearchCard(
     trip: Trip
 ) {
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(14.dp)
     ) {
+
         Text(
-            text = trip.title ?: "Untitled Trip",
+            text = trip.title,
             color = OgodColors.TextPrimary,
             fontSize = 18.sp
         )
@@ -214,11 +238,30 @@ private fun TripSearchCard(
         )
 
         Text(
-            text = trip.category ?: "Unknown category",
+            text = trip.category,
             color = OgodColors.TextSecondary,
+            fontSize = 14.sp
+        )
+
+        Spacer(
+            modifier = Modifier.height(6.dp)
+        )
+
+        Text(
+            text = trip.destination.name,
+            color = OgodColors.TextSecondary,
+            fontSize = 14.sp
+        )
+
+        Spacer(
+            modifier = Modifier.height(6.dp)
+        )
+
+        Text(
+            text = "₹${trip.pricePerPerson}",
+            color = OgodColors.TextPrimary,
             fontSize = 14.sp
         )
     }
 }
-
-
+```
