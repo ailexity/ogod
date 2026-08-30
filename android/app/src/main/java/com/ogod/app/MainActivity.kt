@@ -4,7 +4,6 @@ package com.ogod.app
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AddCircle
@@ -22,21 +21,26 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavType
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.ogod.app.ui.screens.HomeScreen
-import com.ogod.app.ui.screens.SearchScreen
 import com.ogod.app.ui.screens.PostTripScreen
+import com.ogod.app.ui.screens.ProfileScreen
+import com.ogod.app.ui.screens.SearchScreen
+import com.ogod.app.ui.screens.TripDetailScreen
 import com.ogod.app.ui.theme.OgodColors
 import com.ogod.app.ui.theme.OgodTheme
-import com.ogod.app.viewmodel.TripViewModel
 import com.ogod.app.viewmodel.SearchViewModel
+import com.ogod.app.viewmodel.TripViewModel
 import com.ogod.app.viewmodel.factory.ViewModelFactory
-
 
 class MainActivity : ComponentActivity() {
 
@@ -51,49 +55,54 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-
 private data class NavItem(
     val label: String,
-    val icon: ImageVector
+    val icon: ImageVector,
+    val route: String
 )
-
 
 private val navItems = listOf(
     NavItem(
         label = "Home",
-        icon = Icons.Outlined.Home
+        icon = Icons.Outlined.Home,
+        route = "home"
     ),
     NavItem(
         label = "Search",
-        icon = Icons.Outlined.Search
+        icon = Icons.Outlined.Search,
+        route = "search"
     ),
     NavItem(
         label = "Post Trip",
-        icon = Icons.Outlined.AddCircle
+        icon = Icons.Outlined.AddCircle,
+        route = "post_trip"
     ),
     NavItem(
         label = "Profile",
-        icon = Icons.Outlined.Person
+        icon = Icons.Outlined.Person,
+        route = "profile"
     )
 )
 
-
 @Composable
 private fun OgodApp() {
+
+    val navController = rememberNavController()
+
+    val context = LocalContext.current
+
+    val tripViewModel: TripViewModel = viewModel(
+        factory = ViewModelFactory(context)
+    )
+
+    val searchViewModel: SearchViewModel = viewModel(
+        factory = ViewModelFactory(context)
+    )
 
     var selectedIndex by rememberSaveable {
         mutableIntStateOf(0)
     }
 
-    val context = LocalContext.current
-
-    val tripViewModel: TripViewModel = viewModel(
-    factory = ViewModelFactory(context)
-)
-
-val searchViewModel: SearchViewModel = viewModel(
-    factory = ViewModelFactory(context)
-)
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = OgodColors.Background,
@@ -112,7 +121,12 @@ val searchViewModel: SearchViewModel = viewModel(
                         selected = selectedIndex == index,
 
                         onClick = {
+
                             selectedIndex = index
+
+                            navController.navigate(item.route) {
+                                launchSingleTop = true
+                            }
                         },
 
                         icon = {
@@ -139,49 +153,63 @@ val searchViewModel: SearchViewModel = viewModel(
         }
     ) { innerPadding ->
 
-        when (selectedIndex) {
+        NavHost(
+            navController = navController,
+            startDestination = "home"
+        ) {
 
-            0 -> {
-                HomeScreen(tripViewModel)
+            composable("home") {
+
+                HomeScreen(
+                    tripViewModel = tripViewModel,
+                    onTripClick = { tripId ->
+                        navController.navigate("trip_detail/$tripId")
+                    }
+                )
             }
 
-            1 -> {
-        SearchScreen(
-            viewModel = searchViewModel
-        )
-    }
+            composable("search") {
 
-
-           2 -> {
-    PostTripScreen(
-        viewModel = tripViewModel
-    )
-}
-            3 -> {
-                PlaceholderScreen(
-                    title = "Profile"
+                SearchScreen(
+                    viewModel = searchViewModel
                 )
+            }
+
+            composable("post_trip") {
+
+                PostTripScreen(
+                    viewModel = tripViewModel
+                )
+            }
+
+            composable("profile") {
+
+                ProfileScreen(
+                    paddingValues = innerPadding
+                )
+            }
+
+            composable(
+                route = "trip_detail/{tripId}",
+                arguments = listOf(
+                    navArgument("tripId") {
+                        type = NavType.StringType
+                    }
+                )
+            ) { backStackEntry ->
+
+                val tripId =
+                    backStackEntry.arguments?.getString("tripId")
+
+                if (tripId != null) {
+
+                    TripDetailScreen(
+                        tripId = tripId,
+                        viewModel = tripViewModel
+                    )
+                }
             }
         }
     }
 }
-
-
-@Composable
-private fun PlaceholderScreen(
-    title: String
-) {
-
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-
-        Text(
-            text = title,
-            color = OgodColors.TextPrimary
-        )
-    }
-}
 ```
-
