@@ -46,8 +46,10 @@ class TripViewModel(
     }
 
     fun loadTrip(id: String) {
-        viewModelScope.launch {
-            _loading.value = true
+    viewModelScope.launch {
+        _loading.value = true
+        _selectedTrip.value = null
+        _error.value = null
 
             repository.getTrip(id)
                 .onSuccess {
