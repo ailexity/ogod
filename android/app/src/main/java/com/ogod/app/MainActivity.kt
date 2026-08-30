@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ogod.app.ui.screens.HomeScreen
 import com.ogod.app.ui.screens.SearchScreen
+import com.ogod.app.ui.screens.PostTripScreen
 import com.ogod.app.ui.theme.OgodColors
 import com.ogod.app.ui.theme.OgodTheme
 import com.ogod.app.viewmodel.TripViewModel
@@ -151,12 +152,11 @@ val searchViewModel: SearchViewModel = viewModel(
     }
 
 
-            2 -> {
-                PlaceholderScreen(
-                    title = "Post Trip"
-                )
-            }
-
+           2 -> {
+    PostTripScreen(
+        viewModel = tripViewModel
+    )
+}
             3 -> {
                 PlaceholderScreen(
                     title = "Profile"
